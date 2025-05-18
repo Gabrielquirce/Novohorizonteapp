@@ -28,7 +28,8 @@ const initialFormState = {
   telefoneTrabalhoPai: '',
   enderecoPai: '',
   rgPai: '',
-  profissaoPai: ''
+  profissaoPai: '',
+  numeroCasaPai: ''
 };
 
 const cepMask = [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/];
@@ -112,7 +113,7 @@ export default function FamiliaresPaternoScreen() {
     
     const requiredFields: FormField[] = [
       'nomePai', 'cepPai', 'telefonePai', 'nascimentoPai',
-      'cpfPai', 'emailPai', 'enderecoPai', 'rgPai'
+      'cpfPai', 'emailPai', 'enderecoPai', 'rgPai', 'numeroCasaPai'
     ];
 
     return requiredFields.every(field => 
@@ -141,7 +142,8 @@ export default function FamiliaresPaternoScreen() {
         !formData.cpfPai && 'CPF',
         !formData.emailPai && 'E-mail',
         !formData.enderecoPai && 'Endereço',
-        !formData.rgPai && 'RG'
+        !formData.rgPai && 'RG',
+        !formData.numeroCasaPai && 'Número da Casa' 
       ].filter(Boolean);
 
       if (missingFields.length > 0) {
@@ -328,6 +330,17 @@ export default function FamiliaresPaternoScreen() {
             editable={hasResponsavelPaterno}
           />
 
+          <Text style={styles.label}>Número da Casa</Text>
+          <TextInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="123"
+            value={formData.numeroCasaPai}
+            onChangeText={(v) => handleChange('numeroCasaPai', v)}
+            keyboardType="number-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.numeroCasaPai && <Text style={styles.errorText}>{errors.numeroCasaPai}</Text>}
+          
           <Text style={styles.label}>RG</Text>
           <MaskInput
             style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}

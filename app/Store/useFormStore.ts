@@ -31,6 +31,7 @@ type MaeData = {
     telefoneTrabalhoMae: string;
     enderecoMae: string;
     profissaoMae: string;
+    numeroCasaMae: string;
 };
 
 type PaiData = {
@@ -45,6 +46,7 @@ type PaiData = {
     telefoneTrabalhoPai: string;
     enderecoPai: string;
     profissaoPai: string;
+    numeroCasaPai: string;
 
 };
 

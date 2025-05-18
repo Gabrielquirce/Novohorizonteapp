@@ -29,6 +29,7 @@ const initialFormState = {
   enderecoMae: '',
   rgMae: '',
   profissaoMae: '',
+  numeroCasaMae: '',
 };
 
 const cepMask = [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/];
@@ -116,7 +117,7 @@ export default function FamiliaresMaternoScreen() {
       
       const requiredFields: FormField[] = [
         'nomeMae', 'cepMae', 'telefoneMae', 'nascimentoMae',
-        'cpfMae', 'emailMae', 'enderecoMae', 'rgMae'
+        'cpfMae', 'emailMae', 'enderecoMae', 'rgMae', 'numeroCasaMae'
       ];
   
       return requiredFields.every(field => 
@@ -144,7 +145,8 @@ export default function FamiliaresMaternoScreen() {
         !formData.cpfMae && 'CPF',
         !formData.emailMae && 'E-mail',
         !formData.enderecoMae && 'Endereço',
-        !formData.rgMae && 'RG'
+        !formData.rgMae && 'RG',
+        !formData.numeroCasaMae && 'Número da Casa'
       ].filter(Boolean);
 
       if (missingFields.length > 0) {
@@ -333,6 +335,17 @@ export default function FamiliaresMaternoScreen() {
             onChangeText={(v) => handleChange('enderecoMae', v)}
             editable={hasResponsavelMaterno}
           />
+
+          <Text style={styles.label}>Número da Casa</Text>
+          <TextInput  
+            style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
+            placeholder="123"
+            value={formData.numeroCasaMae}
+            onChangeText={(v) => handleChange('numeroCasaMae', v)}
+            keyboardType="number-pad"
+            editable={hasResponsavelMaterno}
+          />
+          {errors.numeroCasaMae && <Text style={styles.errorText}>{errors.numeroCasaMae}</Text>}
 
           <Text style={styles.label}>RG</Text>
           <MaskInput
