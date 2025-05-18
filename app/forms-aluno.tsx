@@ -35,14 +35,6 @@ const initialFormState = {
   anoLetivo:'',
 };
 
-const racasOptions = [
-  { label: 'Branca', value: 'branca' },
-  { label: 'Parda', value: 'parda' },
-  { label: 'Negra', value: 'negra' },
-  { label: 'Indígena', value: 'indigena' },
-  { label: 'Amarela', value: 'amarela' }
-].sort((a, b) => a.label.localeCompare(b.label));
-
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
 const dataMask = [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/];
 const rgMask = [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/];
