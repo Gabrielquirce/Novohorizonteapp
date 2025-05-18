@@ -311,7 +311,7 @@ const FormularioCompleto = () => {
         </>
       ) : (
         <>
-        
+
              <View style={styles.section}>
             <Text style={styles.sectionTitle}>Composição Familiar</Text>
             <TextInput
@@ -489,8 +489,8 @@ const styles = StyleSheet.create({
   backLink: {
     color: '#902121',
     textAlign: 'center',
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    fontSize: 18,
+    
   },
   obsTitle: {
     color: '#902121',
