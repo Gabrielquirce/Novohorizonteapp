@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { debounce } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -43,49 +44,53 @@ export default function FamiliaresMaternoScreen() {
   const [hasResponsavelMaterno, setHasResponsavelMaterno] = useState(false);
 
   const validateField = useCallback(
-    debounce((field: FormField, value: string) => {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        if (!hasResponsavelMaterno) return newErrors;
+    ((() => {
+      const debounced = debounce((field: FormField, value: string) => {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          if (!hasResponsavelMaterno) return newErrors;
 
-        if (value.trim().length > 0) {
-          delete newErrors[field];
-        }
+          if (value.trim().length > 0) {
+            delete newErrors[field];
+          }
 
-        switch(field) {
-          case 'cpfMae':
-            if (value.replace(/\D/g, '').length !== 11) {
-              newErrors[field] = 'CPF inválido';
-            }
-            break;
+          switch(field) {
+            case 'cpfMae':
+              if (value.replace(/\D/g, '').length !== 11) {
+                newErrors[field] = 'CPF inválido';
+              }
+              break;
 
-          case 'nascimentoMae':
-            if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
-              newErrors[field] = 'Data inválida';
-            }
-            break;
+            case 'nascimentoMae':
+              if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
+                newErrors[field] = 'Data inválida';
+              }
+              break;
 
-          case 'rgMae':
-            if (value.replace(/\D/g, '').length !== 9) {
-              newErrors[field] = 'RG inválido';
-            }
-            break;
+            case 'rgMae':
+              if (value.replace(/\D/g, '').length !== 9) {
+                newErrors[field] = 'RG inválido';
+              }
+              break;
 
-          case 'emailMae':
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-              newErrors[field] = 'E-mail inválido';
-            }
-            break;
+            case 'emailMae':
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                newErrors[field] = 'E-mail inválido';
+              }
+              break;
 
-          default:
-            if (!value.trim() && field !== 'trabalhoMae' && field !== 'enderecoMae') {
-              newErrors[field] = 'Campo obrigatório';
-            }
-        }
+            default:
+              if (!value.trim() && field !== 'trabalhoMae' && field !== 'enderecoMae') {
+                newErrors[field] = 'Campo obrigatório';
+              }
+          }
 
-        return newErrors;
-      });
-    }, 300),
+          return newErrors;
+        });
+      }, 300);
+      (debounced as any).flush = debounced.flush;
+      return debounced;
+    })()),
     [hasResponsavelMaterno]
   );
 
@@ -106,6 +111,19 @@ export default function FamiliaresMaternoScreen() {
   };
 
   const handleSubmit = useCallback(async () => {
+    const validateMaeFields = () => {
+      if (!hasResponsavelMaterno) return true;
+      
+      const requiredFields: FormField[] = [
+        'nomeMae', 'cepMae', 'telefoneMae', 'nascimentoMae',
+        'cpfMae', 'emailMae', 'enderecoMae', 'rgMae'
+      ];
+  
+      return requiredFields.every(field => 
+        formData[field] && formData[field].trim().length > 0
+      );
+    };
+
     setIsSubmitting(true);
     validateField.flush();
 
@@ -115,21 +133,75 @@ export default function FamiliaresMaternoScreen() {
       return;
     }
 
-    if (Object.keys(errors).length === 0) {
-      try {
-        useFormStore.getState().setMae(formData);
-        router.push('/forms-paterno');
-      } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao avançar para próxima tela');
-      } finally {
-        setIsSubmitting(false);
+    const isValid = validateMaeFields() && Object.keys(errors).length === 0;
+
+    if (!isValid) {
+      const missingFields = [
+        !formData.nomeMae && 'Nome Completo',
+        !formData.cepMae && 'CEP',
+        !formData.telefoneMae && 'Telefone',
+        !formData.nascimentoMae && 'Data de Nascimento',
+        !formData.cpfMae && 'CPF',
+        !formData.emailMae && 'E-mail',
+        !formData.enderecoMae && 'Endereço',
+        !formData.rgMae && 'RG'
+      ].filter(Boolean);
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          '🚨 Campos Obrigatórios',
+          `Para continuar, preencha os seguintes campos:\n\n• ${missingFields.join('\n• ')}\n\nPor favor, verifique os dados!`,
+          [
+            {
+              text: 'Preencher Agora',
+              style: 'default',
+            },
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+              onPress: () => setIsSubmitting(false),
+            },
+          ]
+        );
+      } else if (Object.keys(errors).length > 0) {
+        Alert.alert(
+          '❌ Erro de Validação',
+          'Corrija os campos destacados em vermelho antes de continuar',
+          [
+            {
+              text: 'Entendi',
+              style: 'cancel',
+            }
+          ]
+        );
       }
-    } else {
-      alert('Por favor, corrija os erros antes de enviar.');
+      
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      useFormStore.getState().setMae(formData);
+      router.push('/forms-paterno');
+    } catch (error) {
+      console.error('Erro:', error);
+      Alert.alert(
+        '⛔ Erro',
+        'Ocorreu um erro ao tentar avançar para a próxima tela',
+        [
+          {
+            text: 'OK',
+            style: 'cancel',
+          }
+        ]
+      );
+    } finally {
       setIsSubmitting(false);
     }
-  }, [errors, formData, validateField, hasResponsavelMaterno]);
+  }, [validateField, hasResponsavelMaterno, errors, formData]);
+
+  // ... (O restante do componente permanece EXATAMENTE igual, incluindo o JSX e os estilos)
+  // [Nota: Mantive o JSX original completo conforme solicitado, apenas alterei a lógica dos alertas]
 
   return (
     <KeyboardAvoidingView
@@ -305,6 +377,7 @@ export default function FamiliaresMaternoScreen() {
   );
 }
 
+// Os estilos permanecem EXATAMENTE os mesmos
 const styles = StyleSheet.create({
   container: {
     flex: 1,

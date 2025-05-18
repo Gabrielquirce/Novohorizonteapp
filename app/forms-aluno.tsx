@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import useFormStore from './Store/useFormStore';
+
 type FormField = keyof typeof initialFormState;
 
 const initialFormState = {
@@ -32,7 +33,7 @@ const initialFormState = {
   turno: '',
   tipoSanguineo: '',
   raca: '',
-  anoLetivo:'',
+  anoLetivo: '',
 };
 
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
@@ -44,70 +45,143 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState<Record<FormField, string>>({} as Record<FormField, string>);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateField = useMemo(() => debounce((field: FormField, value: string) => {
-    setErrors(prev => {
-      const newErrors = { ...prev };
+  const validateField = useCallback(
+    debounce((field: FormField, value: string) => {
+      setErrors(prev => {
+        const newErrors = { ...prev };
 
-      if (value.trim().length > 0) {
-        delete newErrors[field];
-      }
+        if (value.trim().length > 0) {
+          delete newErrors[field];
+        }
 
-      switch(field) {
-        case 'cpf':
-          if (value.replace(/\D/g, '').length !== 11) {
-            newErrors[field] = 'CPF inválido';
-          }
-          break;
+        switch(field) {
+          case 'cpf':
+            if (value.replace(/\D/g, '').length !== 11) {
+              newErrors[field] = 'CPF inválido';
+            }
+            break;
 
-        case 'dataNascimento':
-          if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
-            newErrors[field] = 'Data inválida';
-          }
-          break;
+          case 'dataNascimento':
+            if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
+              newErrors[field] = 'Data inválida';
+            }
+            break;
 
-        case 'rg':
-          if (value.replace(/\D/g, '').length !== 9) {
-            newErrors[field] = 'RG inválido';
-          }
-          break;
+          case 'rg':
+            if (value.replace(/\D/g, '').length !== 9) {
+              newErrors[field] = 'RG inválido';
+            }
+            break;
 
-        case 'sexo':
-        case 'turno':
-        case 'tipoSanguineo':
-        case 'raca':
-          if (!value.trim()) {
-            newErrors[field] = 'Selecione uma opção';
-          }
-          break;
+          case 'sexo':
+          case 'turno':
+          case 'tipoSanguineo':
+          case 'raca':
+            if (!value.trim()) {
+              newErrors[field] = 'Selecione uma opção';
+            }
+            break;
 
-        default:
-          if (!value.trim() && field !== 'naturalidade' && field !== 'nacionalidade') {
-            newErrors[field] = 'Campo obrigatório';
-          }
-      }
+          default:
+            if (!value.trim() && field !== 'naturalidade' && field !== 'nacionalidade') {
+              newErrors[field] = 'Campo obrigatório';
+            }
+        }
 
-      return newErrors;
-    });
-  }, 300), []);
+        return newErrors;
+      });
+    }, 300),
+    []
+  );
 
   const handleChange = useCallback((field: FormField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     validateField(field, value);
   }, [validateField]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const validateRequiredFields = () => {
+    const requiredFields: FormField[] = [
+      'nome', 'dataNascimento', 'cpf', 'rg',
+      'sexo', 'turno', 'tipoSanguineo', 'raca', 'anoLetivo'
+    ];
+
+    return requiredFields.every(field => 
+      formData[field] && formData[field].trim().length > 0
+    );
+  };
+
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     validateField.flush();
-  
-    if (Object.keys(errors).length === 0) {
+
+    const isValid = validateRequiredFields() && Object.keys(errors).length === 0;
+
+    if (!isValid) {
+      const missingFields = [
+        !formData.nome && 'Nome',
+        !formData.dataNascimento && 'Data de Nascimento',
+        !formData.cpf && 'CPF',
+        !formData.rg && 'RG',
+        !formData.sexo && 'Sexo',
+        !formData.turno && 'Turno',
+        !formData.tipoSanguineo && 'Tipo Sanguíneo',
+        !formData.raca && 'Raça',
+        !formData.anoLetivo && 'Ano Letivo'
+      ].filter(Boolean);
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          '🚨 Campos Obrigatórios',
+          `Para continuar, preencha os seguintes campos:\n\n• ${missingFields.join('\n• ')}\n\nVerifique os dados cuidadosamente!`,
+          [
+            {
+              text: 'Preencher Agora',
+              style: 'default',
+            },
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+              onPress: () => setIsSubmitting(false),
+            },
+          ]
+        );
+      } else if (Object.keys(errors).length > 0) {
+        Alert.alert(
+          '❌ Erro de Validação',
+          'Corrija os campos destacados em vermelho antes de prosseguir',
+          [
+            {
+              text: 'Entendi',
+              style: 'cancel',
+            }
+          ]
+        );
+      }
+      
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
       useFormStore.getState().setAluno(formData);
       router.push('/forms-materno');
-    } else {
-      Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      Alert.alert(
+        '⛔ Erro',
+        'Ocorreu um erro ao tentar avançar',
+        [
+          {
+            text: 'OK',
+            style: 'cancel',
+          }
+        ]
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
-  }, [errors, formData, validateField]);
+  }, [errors, formData, validateField, validateRequiredFields]);
 
   const renderPicker = useCallback(({
     field,
@@ -159,7 +233,7 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Nome</Text>
           <TextInput
             style={styles.input}
-            placeholder=""
+            placeholder="João da Silva"
             value={formData.nome}
             onChangeText={(v) => handleChange('nome', v)}
             importantForAutofill="yes"
@@ -302,6 +376,15 @@ export default function RegisterScreen() {
             ],
             placeholder: 'Selecione a Raça'
           })}
+
+          <Text style={styles.label}>Ano Letivo</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Ano letivo atual"
+            value={formData.anoLetivo}
+            onChangeText={(v) => handleChange('anoLetivo', v)}
+            keyboardType="number-pad"
+          />
 
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}

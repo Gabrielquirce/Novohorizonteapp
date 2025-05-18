@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { debounce } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -105,6 +106,20 @@ export default function FamiliaresPaternoScreen() {
     }
   };
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const validatePaiFields = () => {
+    if (!hasResponsavelPaterno) return true;
+    
+    const requiredFields: FormField[] = [
+      'nomePai', 'cepPai', 'telefonePai', 'nascimentoPai',
+      'cpfPai', 'emailPai', 'enderecoPai', 'rgPai'
+    ];
+
+    return requiredFields.every(field => 
+      formData[field] && formData[field].trim().length > 0
+    );
+  };
+
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
     validateField.flush();
@@ -115,21 +130,72 @@ export default function FamiliaresPaternoScreen() {
       return;
     }
 
-    if (Object.keys(errors).length === 0) {
-      try {
-        useFormStore.getState().setPai(formData);
-        router.push('/forms-obs');
-      } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao avançar para próxima tela');
-      } finally {
-        setIsSubmitting(false);
+    const isValid = validatePaiFields() && Object.keys(errors).length === 0;
+
+    if (!isValid) {
+      const missingFields = [
+        !formData.nomePai && 'Nome Completo',
+        !formData.cepPai && 'CEP',
+        !formData.telefonePai && 'Telefone',
+        !formData.nascimentoPai && 'Data de Nascimento',
+        !formData.cpfPai && 'CPF',
+        !formData.emailPai && 'E-mail',
+        !formData.enderecoPai && 'Endereço',
+        !formData.rgPai && 'RG'
+      ].filter(Boolean);
+
+      if (missingFields.length > 0) {
+        Alert.alert(
+          '🚨 Campos Obrigatórios',
+          `Para continuar, preencha os seguintes campos:\n\n• ${missingFields.join('\n• ')}\n\nVerifique os dados cuidadosamente!`,
+          [
+            {
+              text: 'Preencher Agora',
+              style: 'default',
+            },
+            {
+              text: 'Cancelar',
+              style: 'cancel',
+              onPress: () => setIsSubmitting(false),
+            },
+          ]
+        );
+      } else if (Object.keys(errors).length > 0) {
+        Alert.alert(
+          '❌ Erro de Validação',
+          'Corrija os campos destacados em vermelho antes de prosseguir',
+          [
+            {
+              text: 'Entendi',
+              style: 'cancel',
+            }
+          ]
+        );
       }
-    } else {
-      alert('Por favor, corrija os erros antes de enviar.');
+      
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      useFormStore.getState().setPai(formData);
+      router.push('/forms-obs');
+    } catch (error) {
+      console.error('Erro:', error);
+      Alert.alert(
+        '⛔ Erro',
+        'Ocorreu um erro ao tentar avançar para a próxima tela',
+        [
+          {
+            text: 'OK',
+            style: 'cancel',
+          }
+        ]
+      );
+    } finally {
       setIsSubmitting(false);
     }
-  }, [errors, formData, validateField, hasResponsavelPaterno]);
+  }, [validateField, hasResponsavelPaterno, validatePaiFields, errors, formData]);
 
   return (
     <KeyboardAvoidingView
