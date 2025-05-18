@@ -1,4 +1,4 @@
-import { Picker } from '@react-native-picker/picker';
+
 import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -15,7 +15,12 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import api from './api/axiosInstance';
+import StandardPicker from './components/StandardPicker';
 import useFormStore from './Store/useFormStore';
+
+const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
+const rgMask = [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/];
+const telefoneMask = ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/];
 
 const FormularioCompleto = () => {
   const { aluno, mae, pai, clearStore } = useFormStore();
@@ -32,48 +37,61 @@ const FormularioCompleto = () => {
   const [formData, setFormData] = useState({
     reside: '',
     respNome: '',
+    respCpf: '',
     respTelefone: '',
     pessoasAutorizadas: ''
   });
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const telefoneMask = ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/];
 
   const handleChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
   const handleEmail = () => {
-    Linking.openURL(
-      `mailto:vanessalimapsicopedagoga@bol.com.br?` +
-      `subject=Envio de Documentos - ${aluno.nome}&` +
-      `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
+    Alert.alert(
+      '📧 Confirmação de Envio',
+      'Tem certeza que deseja abrir o cliente de e-mail para enviar os documentos?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Enviar', onPress: () => {
+          Linking.openURL(
+            `mailto:vanessalimapsicopedagoga@bol.com.br?` +
+            `subject=Envio de Documentos - ${aluno.nome}&` +
+            `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
+          );
+        }}
+      ]
     );
   };
 
   const validateStep1 = () => {
-    if (!matriculaTipo) {
-      Alert.alert('Atenção', 'Selecione o tipo de matrícula!');
-      return false;
-    }
+    const errors = [];
+    if (!matriculaTipo) errors.push('Selecione o tipo de matrícula');
     if ((matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && !escola.trim()) {
-      Alert.alert('Atenção', 'Informe o nome da escola anterior!');
+      errors.push('Informe o nome da escola anterior');
+    }
+    if (temIrmaos === 'sim' && !irmaosNome.trim()) errors.push('Informe os nomes dos irmãos');
+    if (temEspecialista === 'sim' && !especialista.trim()) errors.push('Informe o tipo de acompanhamento');
+    if (temAlergias === 'sim' && !alergia.trim()) errors.push('Descreva as alergias');
+    if (temMedicamento === 'sim' && !medicamento.trim()) errors.push('Informe os medicamentos');
+
+    if (errors.length > 0) {
+      Alert.alert('🚨 Campos Obrigatórios', `• ${errors.join('\n• ')}`);
       return false;
     }
-    if (temIrmaos === 'sim' && !irmaosNome.trim()) {
-      Alert.alert('Atenção', 'Informe os nomes dos irmãos!');
-      return false;
-    }
-    if (temEspecialista === 'sim' && !especialista.trim()) {
-      Alert.alert('Atenção', 'Informe o tipo de acompanhamento!');
-      return false;
-    }
-    if (temAlergias === 'sim' && !alergia.trim()) {
-      Alert.alert('Atenção', 'Descreva as alergias!');
-      return false;
-    }
-    if (temMedicamento === 'sim' && !medicamento.trim()) {
-      Alert.alert('Atenção', 'Informe os medicamentos!');
+    return true;
+  };
+
+  const validateStep2 = () => {
+    const errors = [];
+    if (!formData.reside.trim()) errors.push('Campo "Reside com" é obrigatório');
+    if (!formData.respNome.trim()) errors.push('Nome do responsável é obrigatório');
+    if (formData.respCpf.replace(/\D/g, '').length !== 11) errors.push('CPF do responsável inválido');
+    if (formData.respTelefone.replace(/\D/g, '').length !== 11) errors.push('Telefone inválido');
+
+    if (errors.length > 0) {
+      Alert.alert('🚨 Dados Incompletos', `• ${errors.join('\n• ')}`);
       return false;
     }
     return true;
@@ -87,6 +105,8 @@ const FormularioCompleto = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      if (step === 2 && !validateStep2()) return;
+
       const alunoResponse = await api.post('/alunos', {
         nome: aluno.nome,
         dataNascimento: aluno.dataNascimento,
@@ -104,6 +124,7 @@ const FormularioCompleto = () => {
         livro: aluno.livro,
         matricula: aluno.matricula
       });
+
       const alunoId = alunoResponse.data.id;
 
       if (mae) {
@@ -153,12 +174,13 @@ const FormularioCompleto = () => {
         medicamento: temMedicamento === 'sim' ? medicamento : null,
         reside: formData.reside,
         respNome: formData.respNome,
+        respCpf: formData.respCpf,
         respTelefone: formData.respTelefone,
         pessoasAutorizadas: formData.pessoasAutorizadas,
         alunoId
       });
 
-      Alert.alert('Sucesso', 'Cadastro completo realizado!');
+      Alert.alert('✅ Sucesso', 'Cadastro completo realizado!');
       clearStore();
       router.push('/home');
 
@@ -166,11 +188,8 @@ const FormularioCompleto = () => {
       let errorMessage = 'Erro no cadastro:';
       if (isAxiosError(error)) {
         errorMessage += `\n${error.response?.data?.message || error.message}`;
-        console.error('Endpoint:', error.config?.url);
-        console.error('Payload:', error.config?.data);
       }
-      Alert.alert('Erro', errorMessage);
-      console.error('Detalhes:', error);
+      Alert.alert('⛔ Erro', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -182,131 +201,126 @@ const FormularioCompleto = () => {
         <View style={styles.stepContainer}>
           <Text style={styles.sectionTitle}>Observações</Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Tipo de Matrícula</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={matriculaTipo}
-                onValueChange={setMatriculaTipo}
-                dropdownIconColor="#666">
-                <Picker.Item label="Selecione" value="" />
-                <Picker.Item label="Inicial" value="inicial" />
-                <Picker.Item label="Transferência Municipal/Estadual" value="transferencia_municipal_estadual" />
-                <Picker.Item label="Transferência Particular" value="transferencia_particular" />
-              </Picker>
-            </View>
-            {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
-              <>
-                <Text style={styles.label}>Nome da Escola Anterior</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Digite o nome da escola"
-                  value={escola}
-                  onChangeText={setEscola}
-                />
-              </>
-            )}
-          </View>
+          <StandardPicker
+            label="Tipo de Matrícula"
+            items={[
+              { label: 'Inicial', value: 'inicial' },
+              { label: 'Transferência Municipal/Estadual', value: 'transferencia_municipal_estadual' },
+              { label: 'Transferência Particular', value: 'transferencia_particular' }
+            ]}
+            placeholder="Selecione"
+            value={matriculaTipo}
+            onValueChange={setMatriculaTipo}
+            error={!matriculaTipo ? 'Selecione o tipo de matrícula' : undefined}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Possui Irmãos?</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={temIrmaos}
-                onValueChange={setTemIrmaos}
-                dropdownIconColor="#666">
-                <Picker.Item label="Selecione" value="" />
-                <Picker.Item label="Sim" value="sim" />
-                <Picker.Item label="Não" value="não" />
-              </Picker>
+          {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Nome da Escola Anterior</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Digite o nome da escola"
+                value={escola}
+                onChangeText={setEscola}
+              />
             </View>
-            {temIrmaos === 'sim' && (
-              <>
-                <Text style={styles.label}>Nomes dos Irmãos</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Separe por vírgulas"
-                  value={irmaosNome}
-                  onChangeText={setIrmaosNome}
-                />
-              </>
-            )}
-          </View>
+          )}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Acompanhamento Especializado</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={temEspecialista}
-                onValueChange={setTemEspecialista}
-                dropdownIconColor="#666">
-                <Picker.Item label="Selecione" value="" />
-                <Picker.Item label="Sim" value="sim" />
-                <Picker.Item label="Não" value="não" />
-              </Picker>
-            </View>
-            {temEspecialista === 'sim' && (
-              <>
-                <Text style={styles.label}>Tipo de Acompanhamento</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Descreva o acompanhamento"
-                  value={especialista}
-                  onChangeText={setEspecialista}
-                />
-              </>
-            )}
-          </View>
+          <StandardPicker
+            label="Possui Irmãos?"
+            items={[
+              { label: 'Sim', value: 'sim' },
+              { label: 'Não', value: 'não' }
+            ]}
+            placeholder="Selecione"
+            value={temIrmaos}
+            onValueChange={setTemIrmaos}
+            error={!temIrmaos ? 'Selecione uma opção' : undefined}
+          />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Possui Alergias?</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={temAlergias}
-                onValueChange={setTemAlergias}
-                dropdownIconColor="#666">
-                <Picker.Item label="Selecione" value="" />
-                <Picker.Item label="Sim" value="sim" />
-                <Picker.Item label="Não" value="não" />
-              </Picker>
+          {temIrmaos === 'sim' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Nomes dos Irmãos</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Separe por vírgulas"
+                value={irmaosNome}
+                onChangeText={setIrmaosNome}
+              />
             </View>
-            {temAlergias === 'sim' && (
-              <>
-                <Text style={styles.label}>Descrição das Alergias</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Descreva as alergias"
-                  value={alergia}
-                  onChangeText={setAlergia}
-                />
-              </>
-            )}
-          </View>
+          )}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Uso de Medicamentos</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={temMedicamento}
-                onValueChange={setTemMedicamento}
-                dropdownIconColor="#666">
-                <Picker.Item label="Selecione" value="" />
-                <Picker.Item label="Sim" value="sim" />
-                <Picker.Item label="Não" value="não" />
-              </Picker>
+          <StandardPicker
+            label="Acompanhamento Especializado"
+            items={[
+              { label: 'Sim', value: 'sim' },
+              { label: 'Não', value: 'não' }
+            ]}
+            placeholder="Selecione"
+            value={temEspecialista}
+            onValueChange={setTemEspecialista}
+            error={!temEspecialista ? 'Selecione uma opção' : undefined}
+          />
+
+          {temEspecialista === 'sim' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tipo de Acompanhamento</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Descreva o acompanhamento"
+                value={especialista}
+                onChangeText={setEspecialista}
+              />
             </View>
-            {temMedicamento === 'sim' && (
-              <>
-                <Text style={styles.label}>Medicamentos em Uso</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Liste os medicamentos"
-                  value={medicamento}
-                  onChangeText={setMedicamento}
-                />
-              </>
-            )}
-          </View>
+          )}
+
+          <StandardPicker
+            label="Possui Alergias?"
+            items={[
+              { label: 'Sim', value: 'sim' },
+              { label: 'Não', value: 'não' }
+            ]}
+            placeholder="Selecione"
+            value={temAlergias}
+            onValueChange={setTemAlergias}
+            error={!temAlergias ? 'Selecione uma opção' : undefined}
+          />
+
+          {temAlergias === 'sim' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Descrição das Alergias</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Descreva as alergias"
+                value={alergia}
+                onChangeText={setAlergia}
+              />
+            </View>
+          )}
+
+          <StandardPicker
+            label="Uso de Medicamentos"
+            items={[
+              { label: 'Sim', value: 'sim' },
+              { label: 'Não', value: 'não' }
+            ]}
+            placeholder="Selecione"
+            value={temMedicamento}
+            onValueChange={setTemMedicamento}
+            error={!temMedicamento ? 'Selecione uma opção' : undefined}
+          />
+
+          {temMedicamento === 'sim' && (
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Medicamentos em Uso</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Liste os medicamentos"
+                value={medicamento}
+                onChangeText={setMedicamento}
+              />
+            </View>
+          )}
 
           <TouchableOpacity
             style={styles.button}
@@ -343,6 +357,15 @@ const FormularioCompleto = () => {
               value={formData.respNome}
               onChangeText={(v) => handleChange('respNome', v)}
             />
+            <Text style={styles.label}>CPF do Responsável</Text>
+            <MaskInput
+              style={styles.input}
+              placeholder="000.000.000-00"
+              value={formData.respCpf}
+              onChangeText={(v) => handleChange('respCpf', v)}
+              mask={cpfMask}
+              keyboardType="number-pad"
+            />
             <Text style={styles.label}>Telefone</Text>
             <MaskInput
               style={styles.input}
@@ -355,28 +378,13 @@ const FormularioCompleto = () => {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Autorizados para Buscar</Text>
-            <TextInput
+            <Text style={styles.label}>Pessoas Autorizados para Buscar</Text>
+            <MaskInput
               style={[styles.input, styles.multilineInput]}
-              placeholder="Nome completo e documento"
+              placeholder="Nome completo separado por vírgulas"
               value={formData.pessoasAutorizadas}
               onChangeText={(v) => handleChange('pessoasAutorizadas', v)}
-              multiline
             />
-          </View>
-
-          <View style={styles.obsContainer}>
-            <Text style={styles.obsTitle}>OBSERVAÇÕES IMPORTANTES:</Text>
-            <Text style={styles.obsText}>
-              ✓ Só clique em &quot;Enviar Documentos&quot; se for enviar por e-mail{"\n"}
-              ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
-              ☑ Clique apenas se a escola solicitar envio digital
-            </Text>
-            <TouchableOpacity
-              style={styles.emailButton}
-              onPress={handleEmail}>
-              <Text style={styles.emailButtonText}>Enviar Documentos</Text>
-            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
@@ -389,6 +397,20 @@ const FormularioCompleto = () => {
               <Text style={styles.buttonText}>Finalizar Cadastro</Text>
             )}
           </TouchableOpacity>
+
+          <View style={styles.obsContainer}>
+            <Text style={styles.obsTitle}>OBSERVAÇÕES IMPORTANTES:</Text>
+            <Text style={styles.obsText}>
+              ✓ Só clique em &quot;Enviar Documentos&quot; se for enviar por e-mail{"\n"}
+              ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
+              ☑ Clique apenas se a escola solicitar envio digital
+            </Text>
+            <TouchableOpacity
+              style={styles.emailButton}
+              onPress={handleEmail}>
+              <Text style={styles.emailButtonText}>📎 Enviar Documentos</Text>
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={[styles.button, styles.secondaryButton]}
@@ -429,12 +451,6 @@ const styles = StyleSheet.create({
     color: '#444',
     fontSize: 14,
     fontWeight: '500',
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    overflow: 'hidden',
   },
   input: {
     width: '100%',
