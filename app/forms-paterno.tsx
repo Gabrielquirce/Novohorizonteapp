@@ -1,4 +1,5 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
+import { debounce } from 'lodash';
 import React, { useCallback, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -11,7 +12,7 @@ import {
   View
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
-import api from './api/axiosInstance';
+import useFormStore from './Store/useFormStore';
 
 type FormField = keyof typeof initialFormState;
 
@@ -37,153 +38,266 @@ const dataMask = [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/];
 
 export default function FamiliaresPaternoScreen() {
   const [formData, setFormData] = useState(initialFormState);
+  const [errors, setErrors] = useState<Record<FormField, string>>({} as Record<FormField, string>);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasResponsavelPaterno, setHasResponsavelPaterno] = useState(false);
+
+  const validateField = useCallback(
+    debounce((field: FormField, value: string) => {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        if (!hasResponsavelPaterno) return newErrors;
+
+        if (value.trim().length > 0) {
+          delete newErrors[field];
+        }
+
+        switch(field) {
+          case 'cpfPai':
+            if (value.replace(/\D/g, '').length !== 11) {
+              newErrors[field] = 'CPF inválido';
+            }
+            break;
+
+          case 'nascimentoPai':
+            if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
+              newErrors[field] = 'Data inválida';
+            }
+            break;
+
+          case 'rgPai':
+            if (value.replace(/\D/g, '').length !== 9) {
+              newErrors[field] = 'RG inválido';
+            }
+            break;
+
+          case 'emailPai':
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+              newErrors[field] = 'E-mail inválido';
+            }
+            break;
+
+          default:
+            if (!value.trim() && field !== 'trabalhoPai' && field !== 'enderecoPai') {
+              newErrors[field] = 'Campo obrigatório';
+            }
+        }
+
+        return newErrors;
+      });
+    }, 300),
+    [hasResponsavelPaterno]
+  );
 
   const handleChange = useCallback((field: FormField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  }, []);
+    validateField(field, value);
+  }, [validateField]);
 
-  const handleSubmit = async () => {
-    try {
-      const response = await api.post('/pais', formData);
-      console.log('Dados enviados com sucesso:', response.data);
-      router.push('/forms-obs');
-    } catch (error) {
-      console.error('Erro ao enviar os dados:', error);
+  const toggleResponsavelPaterno = () => {
+    const newState = !hasResponsavelPaterno;
+    setHasResponsavelPaterno(newState);
+    
+    if (!newState) {
+      setFormData(initialFormState);
+      setErrors({} as Record<FormField, string>);
+      useFormStore.getState().setPai(initialFormState);
     }
   };
 
+  const handleSubmit = useCallback(async () => {
+    setIsSubmitting(true);
+    validateField.flush();
+
+    if (!hasResponsavelPaterno) {
+      router.push('/forms-obs');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (Object.keys(errors).length === 0) {
+      try {
+        useFormStore.getState().setPai(formData);
+        router.push('/forms-obs');
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao avançar para próxima tela');
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      alert('Por favor, corrija os erros antes de enviar.');
+      setIsSubmitting(false);
+    }
+  }, [errors, formData, validateField, hasResponsavelPaterno]);
+
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
+      keyboardVerticalOffset={Platform.select({ ios: 60, android: 0 })}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Dados dos Familiares</Text>
         </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dados do Responsável Paterno</Text>
-
-          <View style={styles.form}>
-            {/* Nome */}
-            <TextInput
-              style={styles.inputFull}
-              placeholder="Nome do Responsável Paterno"
-              value={formData.nomePai}
-              onChangeText={(v) => handleChange('nomePai', v)}
-            />
-
-            {/* CEP e Telefone */}
-            <View style={styles.row}>
-              <MaskInput
-                style={styles.input}
-                placeholder="CEP"
-                value={formData.cepPai}
-                onChangeText={(v) => handleChange('cepPai', v)}
-                mask={cepMask}
-                keyboardType="numeric"
-              />
-              <MaskInput
-                style={styles.input}
-                placeholder="Telefone"
-                value={formData.telefonePai}
-                onChangeText={(v) => handleChange('telefonePai', v)}
-                mask={telefoneMask}
-                keyboardType="phone-pad"
-              />
-            </View>
-
-            {/* Local Trabalho */}
-            <TextInput
-              style={styles.inputFull}
-              placeholder="Local de Trabalho"
-              value={formData.trabalhoPai}
-              onChangeText={(v) => handleChange('trabalhoPai', v)}
-            />
-
-            {/* Nascimento e CPF */}
-            <View style={styles.row}>
-              <MaskInput
-                style={styles.input}
-                placeholder="Data de Nascimento"
-                value={formData.nascimentoPai}
-                onChangeText={(v) => handleChange('nascimentoPai', v)}
-                mask={dataMask}
-                keyboardType="numeric"
-              />
-              <MaskInput
-                style={styles.input}
-                placeholder="CPF"
-                value={formData.cpfPai}
-                onChangeText={(v) => handleChange('cpfPai', v)}
-                mask={cpfMask}
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Email */}
-            <TextInput
-              style={styles.inputFull}
-              placeholder="Email"
-              value={formData.emailPai}
-              onChangeText={(v) => handleChange('emailPai', v)}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            {/* Telefone Trabalho e Endereço */}
-            <View style={styles.row}>
-              <MaskInput
-                style={styles.input}
-                placeholder="Telefone do Trabalho"
-                value={formData.telefoneTrabalhoPai}
-                onChangeText={(v) => handleChange('telefoneTrabalhoPai', v)}
-                mask={telefoneMask}
-                keyboardType="phone-pad"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Endereço"
-                value={formData.enderecoPai}
-                onChangeText={(v) => handleChange('enderecoPai', v)}
-              />
-            </View>
-
-            {/* RG e Profissão */}
-            <View style={styles.row}>
-              <MaskInput
-                style={styles.input}
-                placeholder="RG"
-                value={formData.rgPai}
-                onChangeText={(v) => handleChange('rgPai', v)}
-                mask={rgMask}
-                keyboardType="numeric"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Profissão"
-                value={formData.profissaoPai}
-                onChangeText={(v) => handleChange('profissaoPai', v)}
-              />
-            </View>
-          </View>
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, hasResponsavelPaterno && styles.toggleActive]}
+            onPress={toggleResponsavelPaterno}
+          >
+            <Text style={styles.toggleText}>
+              {hasResponsavelPaterno ? '✓' : ''}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.toggleLabel}>Possui Responsável Paterno</Text>
         </View>
 
-        {/* Botões */}
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Próximo</Text>
-        </TouchableOpacity>
+        <View style={[styles.form, !hasResponsavelPaterno && styles.formDisabled]}>
+          <Text style={styles.sectionTitle}>Dados do Responsável Paterno</Text>
 
-        <Link href="/forms-materno" style={styles.backLink}>
-          Voltar
-        </Link>
+          <TextInput
+            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Nome completo"
+            value={formData.nomePai}
+            onChangeText={(v) => handleChange('nomePai', v)}
+            editable={hasResponsavelPaterno}
+          />
+
+          <View style={styles.row}>
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="CEP"
+              value={formData.cepPai}
+              onChangeText={(v) => handleChange('cepPai', v)}
+              mask={cepMask}
+              keyboardType="number-pad"
+              editable={hasResponsavelPaterno}
+            />
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="Telefone"
+              value={formData.telefonePai}
+              onChangeText={(v) => handleChange('telefonePai', v)}
+              mask={telefoneMask}
+              keyboardType="phone-pad"
+              editable={hasResponsavelPaterno}
+            />
+          </View>
+
+          <TextInput
+            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Local de trabalho"
+            value={formData.trabalhoPai}
+            onChangeText={(v) => handleChange('trabalhoPai', v)}
+            editable={hasResponsavelPaterno}
+          />
+
+          <View style={styles.row}>
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="Data de nascimento"
+              value={formData.nascimentoPai}
+              onChangeText={(v) => handleChange('nascimentoPai', v)}
+              mask={dataMask}
+              keyboardType="number-pad"
+              editable={hasResponsavelPaterno}
+            />
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="CPF"
+              value={formData.cpfPai}
+              onChangeText={(v) => handleChange('cpfPai', v)}
+              mask={cpfMask}
+              keyboardType="number-pad"
+              editable={hasResponsavelPaterno}
+            />
+          </View>
+
+          <TextInput
+            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="E-mail"
+            value={formData.emailPai}
+            onChangeText={(v) => handleChange('emailPai', v)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={hasResponsavelPaterno}
+          />
+
+          <View style={styles.row}>
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="Telefone do trabalho"
+              value={formData.telefoneTrabalhoPai}
+              onChangeText={(v) => handleChange('telefoneTrabalhoPai', v)}
+              mask={telefoneMask}
+              keyboardType="phone-pad"
+              editable={hasResponsavelPaterno}
+            />
+            <TextInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="Endereço completo"
+              value={formData.enderecoPai}
+              onChangeText={(v) => handleChange('enderecoPai', v)}
+              editable={hasResponsavelPaterno}
+            />
+          </View>
+
+          <View style={styles.row}>
+            <MaskInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="RG"
+              value={formData.rgPai}
+              onChangeText={(v) => handleChange('rgPai', v)}
+              mask={rgMask}
+              keyboardType="number-pad"
+              editable={hasResponsavelPaterno}
+            />
+            <TextInput
+              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+              placeholder="Profissão"
+              value={formData.profissaoPai}
+              onChangeText={(v) => handleChange('profissaoPai', v)}
+              editable={hasResponsavelPaterno}
+            />
+          </View>
+
+          {Object.entries(errors).map(([field, message]) => (
+            <Text key={field} style={styles.errorText}>
+              {message}
+            </Text>
+          ))}
+        </View>
+
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity
+            style={[styles.button, isSubmitting && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            <Text style={styles.buttonText}>
+              {isSubmitting ? 'Validando...' : 'Próximo'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/forms-materno')}
+            style={styles.backButton}
+          >
+            <Text style={styles.backLink}>Voltar</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-// Estilos IDÊNTICOS à tela materna
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -191,77 +305,131 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    padding: 20,
+    padding: 16,
   },
   header: {
     backgroundColor: '#902121',
     padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   headerTitle: {
     color: 'white',
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '600',
     textAlign: 'center',
   },
-  section: {
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    elevation: 3,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  toggleButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#8B0000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  toggleActive: {
+    backgroundColor: '#8B0000',
+  },
+  toggleText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  toggleLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  form: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    elevation: 2,
+  },
+  formDisabled: {
+    opacity: 0.6,
+  },
+  buttonsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    elevation: 2,
   },
   sectionTitle: {
     color: '#902121',
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 15,
-  },
-  form: {
-    marginTop: 10,
+    marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 15,
-    gap: 10,
+    gap: 12,
+    marginBottom: 16,
   },
   input: {
     flex: 1,
-    height: 40,
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
   },
   inputFull: {
     width: '100%',
-    height: 40,
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 15,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    marginBottom: 16,
+  },
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
   },
   button: {
     backgroundColor: '#8B0000',
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: 6,
+    padding: 16,
     alignItems: 'center',
-    marginVertical: 15,
+    opacity: 1,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  backButton: {
+    marginTop: 8,
+    alignItems: 'center',
   },
   backLink: {
     color: '#902121',
     textAlign: 'center',
-    marginTop: 10,
-    textDecorationLine: 'underline',
+    marginTop: 16,
+    fontSize: 18,
+    opacity: 1,
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

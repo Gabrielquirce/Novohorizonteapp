@@ -12,11 +12,8 @@ import {
   View
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
-import {
-  heightPercentageToDP as hp,
-  widthPercentageToDP as wp
-} from 'react-native-responsive-screen';
-import api from './api/axiosInstance';
+import useFormStore from './Store/useFormStore';
+
 type FormField = keyof typeof initialFormState;
 
 const initialFormState = {
@@ -30,7 +27,7 @@ const initialFormState = {
   telefoneTrabalhoMae: '',
   enderecoMae: '',
   rgMae: '',
-  profissaoMae: ''
+  profissaoMae: '',
 };
 
 const cepMask = [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/];
@@ -43,72 +40,88 @@ export default function FamiliaresMaternoScreen() {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<FormField, string>>({} as Record<FormField, string>);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasResponsavelMaterno, setHasResponsavelMaterno] = useState(false);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const validateField = useCallback(debounce((field: FormField, value: string) => {
-    setErrors(prev => {
-      const newErrors = { ...prev };
+  const validateField = useCallback(
+    debounce((field: FormField, value: string) => {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        if (!hasResponsavelMaterno) return newErrors;
 
-      if (value.trim().length > 0) {
-        delete newErrors[field];
-      }
+        if (value.trim().length > 0) {
+          delete newErrors[field];
+        }
 
-      switch(field) {
-        case 'cpfMae':
-          if (value.replace(/\D/g, '').length !== 11) {
-            newErrors[field] = 'CPF inválido';
-          }
-          break;
+        switch(field) {
+          case 'cpfMae':
+            if (value.replace(/\D/g, '').length !== 11) {
+              newErrors[field] = 'CPF inválido';
+            }
+            break;
 
-        case 'nascimentoMae':
-          if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
-            newErrors[field] = 'Data inválida';
-          }
-          break;
+          case 'nascimentoMae':
+            if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
+              newErrors[field] = 'Data inválida';
+            }
+            break;
 
-        case 'rgMae':
-          if (value.replace(/\D/g, '').length !== 9) {
-            newErrors[field] = 'RG inválido';
-          }
-          break;
+          case 'rgMae':
+            if (value.replace(/\D/g, '').length !== 9) {
+              newErrors[field] = 'RG inválido';
+            }
+            break;
 
-        case 'emailMae':
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-            newErrors[field] = 'E-mail inválido';
-          }
-          break;
+          case 'emailMae':
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+              newErrors[field] = 'E-mail inválido';
+            }
+            break;
 
-        default:
-          if (!value.trim() && field !== 'trabalhoMae' && field !== 'enderecoMae') {
-            newErrors[field] = 'Campo obrigatório';
-          }
-      }
+          default:
+            if (!value.trim() && field !== 'trabalhoMae' && field !== 'enderecoMae') {
+              newErrors[field] = 'Campo obrigatório';
+            }
+        }
 
-      return newErrors;
-    });
-  }, 300), []);
+        return newErrors;
+      });
+    }, 300),
+    [hasResponsavelMaterno]
+  );
 
   const handleChange = useCallback((field: FormField, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     validateField(field, value);
   }, [validateField]);
 
+  const toggleResponsavelMaterno = () => {
+    const newState = !hasResponsavelMaterno;
+    setHasResponsavelMaterno(newState);
+    
+    if (!newState) {
+      setFormData(initialFormState);
+      setErrors({} as Record<FormField, string>);
+      useFormStore.getState().setMae(initialFormState);
+    }
+  };
+
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    validateField.flush(); // Garante que todas as validações pendentes sejam executadas
+    validateField.flush();
+
+    if (!hasResponsavelMaterno) {
+      router.push('/forms-paterno');
+      setIsSubmitting(false);
+      return;
+    }
 
     if (Object.keys(errors).length === 0) {
       try {
-        // Enviar os dados do formulário para o backend
-        const response = await api.post('/maes', formData);
-        console.log('Dados enviados com sucesso:', response.data);
-
-        // Redirecionar para a próxima tela
-        alert('Dados do responsável materno cadastrados com sucesso!');
+        useFormStore.getState().setMae(formData);
         router.push('/forms-paterno');
       } catch (error) {
-        console.error('Erro ao enviar os dados:', error);
-        alert('Erro ao enviar os dados. Tente novamente.');
+        console.error('Erro:', error);
+        alert('Erro ao avançar para próxima tela');
       } finally {
         setIsSubmitting(false);
       }
@@ -116,13 +129,13 @@ export default function FamiliaresMaternoScreen() {
       alert('Por favor, corrija os erros antes de enviar.');
       setIsSubmitting(false);
     }
-  }, [errors, formData, validateField]);
+  }, [errors, formData, validateField, hasResponsavelMaterno]);
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={styles.container}
-      keyboardVerticalOffset={Platform.select({ ios: hp(4), android: hp(1) })}
+      keyboardVerticalOffset={Platform.select({ ios: 60, android: 0 })}
     >
       <ScrollView
         contentContainerStyle={styles.scrollContainer}
@@ -131,113 +144,127 @@ export default function FamiliaresMaternoScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Dados do Responsável Materno</Text>
+          <Text style={styles.headerTitle}>Dados dos Familiares</Text>
         </View>
 
-        <View style={styles.formContainer}>
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, hasResponsavelMaterno && styles.toggleActive]}
+            onPress={toggleResponsavelMaterno}
+          >
+            <Text style={styles.toggleText}>
+              {hasResponsavelMaterno ? '✓' : ''}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.toggleLabel}>Possui Responsável Materno</Text>
+        </View>
+
+        <View style={[styles.form, !hasResponsavelMaterno && styles.formDisabled]}>
+          <Text style={styles.sectionTitle}>Dados do Responsável Materno</Text>
+
           <TextInput
-            style={styles.fullWidthInput}
+            style={[styles.inputFull, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Nome completo"
-            placeholderTextColor="#666"
             value={formData.nomeMae}
             onChangeText={(v) => handleChange('nomeMae', v)}
+            editable={hasResponsavelMaterno}
           />
 
           <View style={styles.row}>
-          <MaskInput
-              style={styles.halfWidthInput}
+            <MaskInput
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="CEP"
-              placeholderTextColor="#666"
               value={formData.cepMae}
-              onChangeText={(v) => handleChange('cepMae', v)} // Adicione esta linha!
+              onChangeText={(v) => handleChange('cepMae', v)}
               mask={cepMask}
               keyboardType="number-pad"
+              editable={hasResponsavelMaterno}
             />
             <MaskInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="Telefone"
-              placeholderTextColor="#666"
               value={formData.telefoneMae}
               onChangeText={(v) => handleChange('telefoneMae', v)}
               mask={telefoneMask}
               keyboardType="phone-pad"
+              editable={hasResponsavelMaterno}
             />
           </View>
 
           <TextInput
-            style={styles.fullWidthInput}
+            style={[styles.inputFull, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Local de trabalho"
-            placeholderTextColor="#666"
             value={formData.trabalhoMae}
             onChangeText={(v) => handleChange('trabalhoMae', v)}
+            editable={hasResponsavelMaterno}
           />
 
           <View style={styles.row}>
             <MaskInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="Data de nascimento"
-              placeholderTextColor="#666"
               value={formData.nascimentoMae}
               onChangeText={(v) => handleChange('nascimentoMae', v)}
               mask={dataMask}
               keyboardType="number-pad"
+              editable={hasResponsavelMaterno}
             />
             <MaskInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="CPF"
-              placeholderTextColor="#666"
               value={formData.cpfMae}
               onChangeText={(v) => handleChange('cpfMae', v)}
               mask={cpfMask}
               keyboardType="number-pad"
+              editable={hasResponsavelMaterno}
             />
           </View>
 
           <TextInput
-            style={styles.fullWidthInput}
+            style={[styles.inputFull, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="E-mail"
-            placeholderTextColor="#666"
             value={formData.emailMae}
             onChangeText={(v) => handleChange('emailMae', v)}
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={hasResponsavelMaterno}
           />
 
           <View style={styles.row}>
             <MaskInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="Telefone do trabalho"
-              placeholderTextColor="#666"
               value={formData.telefoneTrabalhoMae}
               onChangeText={(v) => handleChange('telefoneTrabalhoMae', v)}
               mask={telefoneMask}
               keyboardType="phone-pad"
+              editable={hasResponsavelMaterno}
             />
             <TextInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="Endereço completo"
-              placeholderTextColor="#666"
               value={formData.enderecoMae}
               onChangeText={(v) => handleChange('enderecoMae', v)}
+              editable={hasResponsavelMaterno}
             />
           </View>
 
           <View style={styles.row}>
             <MaskInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="RG"
-              placeholderTextColor="#666"
               value={formData.rgMae}
               onChangeText={(v) => handleChange('rgMae', v)}
               mask={rgMask}
               keyboardType="number-pad"
+              editable={hasResponsavelMaterno}
             />
             <TextInput
-              style={styles.halfWidthInput}
+              style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
               placeholder="Profissão"
-              placeholderTextColor="#666"
               value={formData.profissaoMae}
               onChangeText={(v) => handleChange('profissaoMae', v)}
+              editable={hasResponsavelMaterno}
             />
           </View>
 
@@ -246,7 +273,9 @@ export default function FamiliaresMaternoScreen() {
               {message}
             </Text>
           ))}
+        </View>
 
+        <View style={styles.buttonsContainer}>
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
             onPress={handleSubmit}
@@ -258,7 +287,7 @@ export default function FamiliaresMaternoScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.push('/forms-aluno')}
             style={styles.backButton}
           >
             <Text style={styles.backLink}>Voltar</Text>
@@ -276,84 +305,131 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingHorizontal: wp(4),
-    paddingBottom: hp(2),
+    padding: 16,
   },
   header: {
     backgroundColor: '#902121',
-    paddingVertical: hp(1.5),
-    borderRadius: wp(2),
-    marginBottom: hp(1),
+    padding: 20,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   headerTitle: {
     color: 'white',
-    fontSize: hp(2.1),
+    fontSize: 22,
     fontWeight: '600',
     textAlign: 'center',
   },
-  formContainer: {
+  toggleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: wp(2),
-    padding: wp(3),
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
     elevation: 2,
+  },
+  toggleButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#8B0000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  toggleActive: {
+    backgroundColor: '#8B0000',
+  },
+  toggleText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  toggleLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  form: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    elevation: 2,
+  },
+  formDisabled: {
+    opacity: 0.6,
+  },
+  buttonsContainer: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 16,
+    marginTop: 16,
+    elevation: 2,
+  },
+  sectionTitle: {
+    color: '#902121',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: wp(1.5),
-    marginBottom: hp(0.8),
+    gap: 12,
+    marginBottom: 16,
   },
-  fullWidthInput: {
+  input: {
+    flex: 1,
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+  },
+  inputFull: {
     width: '100%',
-    height: hp(5.3),
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: wp(1.5),
-    paddingHorizontal: wp(3),
-    backgroundColor: '#fff',
-    fontSize: hp(1.7),
-    color: '#333',
-    marginBottom: hp(0.8),
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    fontSize: 16,
+    backgroundColor: '#ffffff',
+    marginBottom: 16,
   },
-  halfWidthInput: {
-    width: '48.5%',
-    height: hp(5.3),
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: wp(1.5),
-    paddingHorizontal: wp(3),
-    backgroundColor: '#fff',
-    fontSize: hp(1.7),
-    color: '#333',
+  disabledInput: {
+    backgroundColor: '#f0f0f0',
   },
   button: {
     backgroundColor: '#8B0000',
-    borderRadius: wp(1.5),
-    paddingVertical: hp(1.3),
-    marginTop: hp(1.5),
+    borderRadius: 6,
+    padding: 16,
     alignItems: 'center',
+    opacity: 1,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
   buttonText: {
     color: 'white',
-    fontSize: hp(1.8),
+    fontSize: 18,
     fontWeight: '600',
   },
   backButton: {
-    marginTop: hp(1.2),
-    alignSelf: 'center',
+    marginTop: 8,
+    alignItems: 'center',
   },
   backLink: {
     color: '#902121',
-    fontSize: hp(1.6),
-    textDecorationLine: 'underline',
+    textAlign: 'center',
+    marginTop: 16,
+    fontSize: 18,
+    opacity: 1,
   },
   errorText: {
     color: '#dc2626',
-    fontSize: hp(1.4),
-    marginBottom: hp(0.5),
-    paddingHorizontal: wp(1),
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

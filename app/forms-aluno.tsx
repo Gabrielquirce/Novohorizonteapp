@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { debounce } from 'lodash';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,8 +14,7 @@ import {
   View
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
-import api from './api/axiosInstance'; // Importe a instância do Axios
-
+import useFormStore from './Store/useFormStore';
 type FormField = keyof typeof initialFormState;
 
 const initialFormState = {
@@ -105,25 +105,19 @@ export default function RegisterScreen() {
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    validateField.flush();
-
+    validateField.flush(); // Valida campos
+  
     if (Object.keys(errors).length === 0) {
-      try {
-        // Enviar os dados do formulário para o backend
-        const response = await api.post('/alunos', formData);
-        console.log('Resposta do servidor:', response.data);
-
-        // Redirecionar para a próxima tela
-        router.push('/forms-materno');
-      } catch (error) {
-        console.error('Erro ao enviar os dados:', error);
-        alert('Erro ao enviar os dados. Tente novamente.');
-      } finally {
-        setIsSubmitting(false);
-      }
+      // ✅ Salva no estado global
+      useFormStore.getState().setAluno(formData);
+      
+      // ➡️ Navega sem fazer POST
+      router.push('/forms-materno');
     } else {
-      setIsSubmitting(false);
+      Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
     }
+    
+    setIsSubmitting(false);
   }, [errors, formData, validateField]);
 
   const renderPicker = useCallback(({
@@ -323,7 +317,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.back()}
+            onPress={() => router.push('/home')}
             style={styles.backButton}
           >
             <Text style={styles.backLink}>Cancelar e Voltar</Text>
@@ -411,7 +405,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
   },
   backButton: {
@@ -422,8 +416,8 @@ const styles = StyleSheet.create({
     color: '#902121',
     textAlign: 'center',
     marginTop: 16,
-    fontSize: 14,
-    textDecorationLine: 'underline',
+    fontSize: 18,
+    opacity: 1,
   },
   errorText: {
     color: '#dc2626',

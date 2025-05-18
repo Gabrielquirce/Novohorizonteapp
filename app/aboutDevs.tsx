@@ -1,6 +1,6 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Linking } from 'react-native';
 import { Link } from 'expo-router';
+import React from 'react';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export default function AboutDevs() {
   const developers = [
@@ -181,10 +181,10 @@ const styles = StyleSheet.create({
     color: '#0A66C2',
   },
   link: {
-    color: 'rgba(138,43,226,0.76)',
-    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.76)',
+    fontSize: 18,
     textAlign: 'center',
     marginVertical: 20,
-    textDecorationLine: 'underline',
+    
   },
 });

@@ -2,10 +2,11 @@
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
+    "baseUrl": ".", // Adicione esta linha
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./src/*"], // Atualize para "./src/*"
+      "@components/*": ["./src/components/*"], // Adicione seus aliases
+      "@assets/*": ["./src/assets/*"]
     }
   },
   "include": [
@@ -13,5 +14,6 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+  ],
+  "exclude": ["node_modules"] // Opcional, para ignorar pastas
 }

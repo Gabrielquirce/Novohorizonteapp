@@ -1,8 +1,12 @@
+import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { Link, router } from 'expo-router';
+import { GestureResponderEvent, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
+  function confirmExit(event: GestureResponderEvent): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -19,7 +23,7 @@ export default function HomeScreen() {
         {/* Seção Matrícula */}
         <TouchableOpacity
           style={styles.card}
-          onPress={() => router.push('/login')}
+          onPress={() => router.push('/forms-aluno')}
         >
           <Text style={styles.cardTitle}>Pré Matrícula</Text>
           <Text style={styles.cardSubtitle}>Cadastre os dados do aluno</Text>
@@ -28,7 +32,7 @@ export default function HomeScreen() {
         {/* Seção Gerenciamento de Matrículas */}
         <TouchableOpacity
           style={styles.card}
-          onPress={() => router.push('/loginAdm')}
+          onPress={() => router.push('/students')}
         >
           <Text style={styles.cardTitle}>Matrículas</Text>
           <Text style={styles.cardSubtitle}>Acesse os dados dos alunos pré matriculados</Text>
@@ -51,10 +55,13 @@ export default function HomeScreen() {
           <Text style={styles.cardSubtitle}>Informações sobre os desenvolvedores do projeto</Text>
         </TouchableOpacity>
 
-        {/* Botão de Logout */}
-        <Link href="/login" style={styles.logoutButton}>
+      
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={confirmExit}
+        >
           <Text style={styles.logoutText}>Sair</Text>
-        </Link>
+        </TouchableOpacity>
 
 
       </ScrollView>

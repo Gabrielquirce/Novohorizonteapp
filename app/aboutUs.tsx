@@ -1,9 +1,86 @@
-import React from 'react';
-import { StyleSheet, View, Text, ScrollView, Image } from 'react-native';
-import { Link } from 'expo-router';
 import { FontAwesome } from '@expo/vector-icons';
+import { Link } from 'expo-router';
+import React from 'react';
+// eslint-disable-next-line import/no-duplicates
+import { Dimensions, FlatList, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
+// Componente Reutilizável para Segmentos
+// eslint-disable-next-line import/no-duplicates
+import { ImageSourcePropType } from 'react-native';
+
+// Componente Reutilizável para Atividades
+type ActivityCardProps = {
+  image: any; // You can replace 'any' with ImageSourcePropType from 'react-native' for stricter typing
+  title: string;
+  text: string;
+};
+
+const ActivityCard: React.FC<ActivityCardProps> = ({ image, title, text }) => (
+  <View style={styles.activityCard}>
+    <Image 
+      source={image} 
+      style={styles.activityImage}
+      accessibilityLabel={title}
+    />
+    <View style={styles.activityTextContainer}>
+      <Text style={styles.activityTitle}>{title}</Text>
+      <Text style={styles.activityText}>{text}</Text>
+    </View>
+  </View>
+);
+
+type SegmentCardProps = {
+  image: ImageSourcePropType;
+  title: string;
+  text: string;
+};
+
+const SegmentCard: React.FC<SegmentCardProps> = ({ image, title, text }) => (
+  <View style={styles.segmentCard}>
+    <Image
+      source={image}
+      style={styles.segmentImage}
+      accessibilityLabel={title}
+    />
+    <Text style={styles.segmentTitle}>{title}</Text>
+    <Text style={styles.segmentText}>{text}</Text>
+  </View>
+);
 
 export default function AboutUsScreen() {
+  const activities = [
+    {
+      id: 1,
+      image: require('../assets/images/ballet.png'),
+      title: 'Ballet',
+      text: 'Trabalho de postura, equilíbrio e coordenação em um ambiente acolhedor e divertido.'
+    },
+    {
+      id: 2,
+      image: require('../assets/images/computadores.png'),
+      title: 'Informática',
+      text: 'Desenvolvimento do pensamento lógico e uso responsável da tecnologia.'
+    },
+    {
+      id: 3,
+      image: require('../assets/images/capoeira.png'),
+      title: 'Capoeira',
+      text: 'Aula dinâmica que une arte marcial, música e cultura brasileira, promovendo disciplina e coordenação motora.'
+    },
+    {
+      id: 4,
+      image: require('../assets/images/jiujitsu.png'),
+      title: 'Jiu-Jítsu',
+      text: 'Desenvolve autoconfiança, respeito e técnicas de defesa pessoal em ambiente seguro e supervisionado.'
+    },
+    {
+      id: 5,
+      image: require('../assets/images/EF.png'),
+      title: 'Educação Física',
+      text: 'Promoção de hábitos saudáveis através de esportes e atividades físicas diversificadas.'
+    }
+  ];
+
   return (
     <ScrollView style={styles.container}>
       {/* Cabeçalho */}
@@ -11,6 +88,7 @@ export default function AboutUsScreen() {
         <Image
           source={require('../assets/images/logo.png')}
           style={styles.logo}
+          accessibilityLabel="Logo da instituição"
         />
         <Text style={styles.title}>Centro Educacional Novo Horizonte</Text>
       </View>
@@ -26,6 +104,7 @@ export default function AboutUsScreen() {
           <Image
             source={require('../assets/images/profGenerica.jpg')}
             style={styles.missionImage}
+            accessibilityLabel="Professora em sala de aula"
           />
         </View>
       </View>
@@ -33,12 +112,13 @@ export default function AboutUsScreen() {
       {/* Citação da Diretora */}
       <View style={[styles.section, styles.directorSection]}>
         <Text style={styles.quote}>
-          "A instituição planeja estrategicamente para o ano letivo projetos inovadores e multidisciplinares
-          para estimular o ensino-aprendizado e promover relações interpessoais."
+          &quot;A instituição planeja estrategicamente para o ano letivo projetos inovadores e multidisciplinares
+          para estimular o ensino-aprendizado e promover relações interpessoais.&quot;
         </Text>
         <Image
           source={require('../assets/images/diretora.png')}
           style={styles.directorImage}
+          accessibilityLabel="Diretora Vanessa Lima"
         />
         <Text style={styles.directorName}>Vanessa Lima</Text>
         <Text style={styles.directorTitle}>Diretora</Text>
@@ -47,130 +127,68 @@ export default function AboutUsScreen() {
       {/* Segmentos */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Nossos Segmentos</Text>
+        
+        <SegmentCard
+          image={require('../assets/images/ensinoInfantil.jpg')}
+          title="Educação Infantil"
+          text="Desenvolvimento inicial com foco em brincadeiras e aprendizado, estimulando criatividade e socialização."
+        />
 
-        <View style={styles.segmentCard}>
-          <Image
-            source={require('../assets/images/ensinoInfantil.jpg')}
-            style={styles.segmentImage}
-          />
-          <Text style={styles.segmentTitle}>Educação Infantil</Text>
-          <Text style={styles.segmentText}>
-            Desenvolvimento inicial com foco em brincadeiras e aprendizado, estimulando criatividade e socialização.
-          </Text>
-        </View>
+        <SegmentCard
+          image={require('../assets/images/fundamental.jpg')}
+          title="Ensino Fundamental I"
+          text="Exploração do universo das letras e números, com aventuras nas operações matemáticas básicas."
+        />
 
-        <View style={styles.segmentCard}>
-          <Image
-            source={require('../assets/images/fundamental.jpg')}
-            style={styles.segmentImage}
-          />
-          <Text style={styles.segmentTitle}>Ensino Fundamental I</Text>
-          <Text style={styles.segmentText}>
-            Exploração do universo das letras e números, com aventuras nas operações matemáticas básicas.
-          </Text>
-        </View>
-
-        <View style={styles.segmentCard}>
-          <Image
-            source={require('../assets/images/fundamental2.jpg')}
-            style={styles.segmentImage}
-          />
-          <Text style={styles.segmentTitle}>Ensino Fundamental II</Text>
-          <Text style={styles.segmentText}>
-            Estímulo ao crescimento intelectual com abordagem interdisciplinar e multidisciplinar.
-          </Text>
-        </View>
+        <SegmentCard
+          image={require('../assets/images/fundamental2.jpg')}
+          title="Ensino Fundamental II"
+          text="Estímulo ao crescimento intelectual com abordagem interdisciplinar e multidisciplinar."
+        />
       </View>
 
-      {/* Atividades */}
+      {/* Atividades com FlatList */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Atividades Extras</Text>
+        <FlatList
+          data={activities}
+          renderItem={({ item }) => (
+            <ActivityCard
+              image={item.image}
+              title={item.title}
+              text={item.text}
+            />
+          )}
+          keyExtractor={item => item.id.toString()}
+          scrollEnabled={false}
+        />
+      </View>
 
-        <View style={styles.activityCard}>
-          <Image
-            source={require('../assets/images/ballet.png')}
-            style={styles.activityImage}
-          />
-          <View style={styles.activityTextContainer}>
-            <Text style={styles.activityTitle}>Ballet</Text>
-            <Text style={styles.activityText}>
-              Trabalho de postura, equilíbrio e coordenação em um ambiente acolhedor e divertido.
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.activityCard}>
-          <Image
-            source={require('../assets/images/computadores.png')}
-            style={styles.activityImage}
-          />
-          <View style={styles.activityTextContainer}>
-            <Text style={styles.activityTitle}>Informática</Text>
-            <Text style={styles.activityText}>
-              Desenvolvimento do pensamento lógico e uso responsável da tecnologia.
-            </Text>
-          </View>
-        </View>
-                {/* Capoeira */}
-                <View style={styles.activityCard}>
-                  <Image
-                    source={require('../assets/images/capoeira.png')}
-                    style={styles.activityImage}
-                  />
-                  <View style={styles.activityTextContainer}>
-                    <Text style={styles.activityTitle}>Capoeira</Text>
-                    <Text style={styles.activityText}>
-                      Aula dinâmica que une arte marcial, música e cultura brasileira, promovendo disciplina e coordenação motora.
-                    </Text>
-                  </View>
-                </View>
-                {/* Jiu-Jítsu */}
-                <View style={styles.activityCard}>
-                  <Image
-                    source={require('../assets/images/jiujitsu.png')}
-                    style={styles.activityImage}
-                  />
-                  <View style={styles.activityTextContainer}>
-                    <Text style={styles.activityTitle}>Jiu-Jítsu</Text>
-                    <Text style={styles.activityText}>
-                      Desenvolve autoconfiança, respeito e técnicas de defesa pessoal em ambiente seguro e supervisionado.
-                    </Text>
-                  </View>
-                </View>
-                {/* Educação Física */}
-                <View style={styles.activityCard}>
-                  <Image
-                    source={require('../assets/images/EF.png')}
-                    style={styles.activityImage}
-                  />
-                  <View style={styles.activityTextContainer}>
-                    <Text style={styles.activityTitle}>Educação Física</Text>
-                    <Text style={styles.activityText}>
-                      Promoção de hábitos saudáveis através de esportes e atividades físicas diversificadas.
-                    </Text>
-                  </View>
-                </View>
-              </View>
-      {/* Rodapé */}
+      {/* Rodapé Atualizado */}
       <View style={styles.footer}>
         <View style={styles.contactContainer}>
           <FontAwesome name="phone" size={20} color="white" />
-          <Text style={styles.contactText}>(00) 1234-5678</Text>
+          <Text style={styles.contactText}>(21) 98506-7184</Text>
         </View>
 
         <View style={styles.socialIcons}>
-          <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
-          <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.facebook.com/novohorizontetere')}>
+            <FontAwesome name="facebook" size={24} color="white" style={styles.icon} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://www.instagram.com/centroeducnovohorizonteoficial/')}>
+            <FontAwesome name="instagram" size={24} color="white" style={styles.icon} />
+          </TouchableOpacity>
         </View>
 
         <Link href="/home" style={styles.link}>
-          Voltar para tela inicial
+          <Text style={styles.linkText}>Voltar para tela inicial</Text>
         </Link>
       </View>
     </ScrollView>
   );
 }
 
+const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -186,6 +204,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     marginBottom: 10,
+    resizeMode: 'contain',
   },
   title: {
     color: 'white',
@@ -206,21 +225,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   missionContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: width > 768 ? 'row' : 'column',
+    alignItems: 'center',
+    gap: 15,
   },
   missionImage: {
     width: '100%',
     height: 200,
     borderRadius: 10,
-    marginTop: 10,
+    resizeMode: 'cover',
   },
   text: {
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.95)',
     fontSize: 16,
     lineHeight: 24,
-    marginBottom: 15,
+    flex: 1,
   },
   directorSection: {
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -232,12 +251,15 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     textAlign: 'center',
     marginBottom: 20,
+    lineHeight: 24,
   },
   directorImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
     marginBottom: 10,
+    borderWidth: 2,
+    borderColor: 'white',
   },
   directorName: {
     color: 'white',
@@ -246,7 +268,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   directorTitle: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 16,
   },
   segmentCard: {
@@ -260,6 +282,7 @@ const styles = StyleSheet.create({
     height: 150,
     borderRadius: 8,
     marginBottom: 10,
+    resizeMode: 'cover',
   },
   segmentTitle: {
     color: 'white',
@@ -268,8 +291,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   segmentText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
+    lineHeight: 20,
   },
   activityCard: {
     flexDirection: 'row',
@@ -281,10 +305,12 @@ const styles = StyleSheet.create({
   activityImage: {
     width: 100,
     height: 100,
+    resizeMode: 'cover',
   },
   activityTextContainer: {
     flex: 1,
     padding: 10,
+    justifyContent: 'center',
   },
   activityTitle: {
     color: 'white',
@@ -293,8 +319,9 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   activityText: {
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
+    lineHeight: 20,
   },
   footer: {
     padding: 20,
@@ -319,8 +346,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   link: {
-    color: '#8A2BE2',
-    fontSize: 16,
-    textDecorationLine: 'underline',
-  },
+    marginTop: 10,
+  },
+  linkText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 18,
+  },
 });

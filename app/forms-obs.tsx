@@ -1,7 +1,11 @@
 import { Picker } from '@react-native-picker/picker';
-import { Link, router } from 'expo-router';
+import { isAxiosError } from 'axios';
+import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,181 +13,386 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import MaskInput from 'react-native-mask-input';
 import api from './api/axiosInstance';
+import useFormStore from './Store/useFormStore';
 
-type FormField = keyof typeof initialFormState;
+const FormularioCompleto = () => {
+  const { aluno, mae, pai, clearStore } = useFormStore();
+  const [matriculaTipo, setMatriculaTipo] = useState('');
+  const [escola, setEscola] = useState('');
+  const [temIrmaos, setTemIrmaos] = useState('');
+  const [irmaosNome, setIrmaosNome] = useState('');
+  const [temEspecialista, setTemEspecialista] = useState('');
+  const [especialista, setEspecialista] = useState('');
+  const [temAlergias, setTemAlergias] = useState('');
+  const [alergia, setAlergia] = useState('');
+  const [temMedicamento, setTemMedicamento] = useState('');
+  const [medicamento, setMedicamento] = useState('');
+  const [formData, setFormData] = useState({
+    reside: '',
+    respNome: '',
+    respTelefone: '',
+    pessoasAutorizadas: ''
+  });
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const telefoneMask = ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/];
 
-const initialFormState = {
-  matriculaTipo:'',
-   escola:'',
-  temIrmaos:'',
-  irmaosNome:'',
-  temEspecialista:'',
-  especialista: '',
-  temAlergias: '',
-  alergia:'',
-  temMedicamento:'',
-  medicamento:'',
-};
-
-export default function ObservacoesScreen() {
-  const [formData, setFormData] = useState(initialFormState);
-
-  const handleChange = useCallback((field: FormField, value: string) => {
+  const handleChange = useCallback((field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
 
-  const handleSubmit = async () => {
-    try {
-      const response = await api.post('/observacoes', formData);
-      console.log('Dados enviados com sucesso:', response.data);
+  const handleEmail = () => {
+    Linking.openURL(
+      `mailto:vanessalimapsicopedagoga@bol.com.br?` +
+      `subject=Envio de Documentos - ${aluno.nome}&` +
+      `body=Segue em anexo os documentos necessários para matrícula de ${aluno.nome}`
+    );
+  };
 
-      alert('Dados de observações cadastrados com sucesso!');
-      router.push('/forms-info');
+  const validateStep1 = () => {
+    if (!matriculaTipo) {
+      Alert.alert('Atenção', 'Selecione o tipo de matrícula!');
+      return false;
+    }
+    if ((matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && !escola.trim()) {
+      Alert.alert('Atenção', 'Informe o nome da escola anterior!');
+      return false;
+    }
+    if (temIrmaos === 'sim' && !irmaosNome.trim()) {
+      Alert.alert('Atenção', 'Informe os nomes dos irmãos!');
+      return false;
+    }
+    if (temEspecialista === 'sim' && !especialista.trim()) {
+      Alert.alert('Atenção', 'Informe o tipo de acompanhamento!');
+      return false;
+    }
+    if (temAlergias === 'sim' && !alergia.trim()) {
+      Alert.alert('Atenção', 'Descreva as alergias!');
+      return false;
+    }
+    if (temMedicamento === 'sim' && !medicamento.trim()) {
+      Alert.alert('Atenção', 'Informe os medicamentos!');
+      return false;
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (!validateStep1()) return;
+    setStep(2);
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const alunoResponse = await api.post('/alunos', {
+        nome: aluno.nome,
+        dataNascimento: aluno.dataNascimento,
+        naturalidade: aluno.naturalidade,
+        nacionalidade: aluno.nacionalidade,
+        cpf: aluno.cpf,
+        rg: aluno.rg,
+        sexo: aluno.sexo,
+        turno: aluno.turno,
+        tipoSanguineo: aluno.tipoSanguineo,
+        raca: aluno.raca,
+        anoLetivo: aluno.anoLetivo,
+        termo: aluno.termo,
+        folha: aluno.folha, 
+        livro: aluno.livro,
+        matricula: aluno.matricula
+      });
+      const alunoId = alunoResponse.data.id;
+
+      if (mae) {
+        await api.post('/maes', {
+          nomeMae: mae.nomeMae,
+          cepMae: mae.cepMae,
+          telefoneMae: mae.telefoneMae,
+          trabalhoMae: mae.trabalhoMae,
+          nascimentoMae: mae.nascimentoMae,
+          cpfMae: mae.cpfMae,
+          emailMae: mae.emailMae,
+          telefoneTrabalhoMae: mae.telefoneTrabalhoMae,
+          enderecoMae: mae.enderecoMae,
+          rgMae: mae.rgMae,
+          profissaoMae: mae.profissaoMae,
+          alunoId
+        });
+      }
+
+      if (pai) {
+        await api.post('/pais', {
+          nomePai: pai.nomePai,
+          cepPai: pai.cepPai,
+          telefonePai: pai.telefonePai,
+          trabalhoPai: pai.trabalhoPai,
+          nascimentoPai: pai.nascimentoPai,
+          cpfPai: pai.cpfPai,
+          emailPai: pai.emailPai,
+          telefoneTrabalhoPai: pai.telefoneTrabalhoPai,
+          enderecoPai: pai.enderecoPai,
+          rgPai: pai.rgPai,
+          profissaoPai: pai.profissaoPai,
+          alunoId
+        });
+      }
+
+      await api.post('/observacoes', {
+        matriculaTipo,
+        escola,
+        temIrmaos: temIrmaos,
+        irmaosNome: temIrmaos === 'sim' ? irmaosNome : null,
+        temEspecialista: temEspecialista,
+        especialista: temEspecialista === 'sim' ? especialista : null,
+        temAlergias: temAlergias,
+        alergia: temAlergias === 'sim' ? alergia : null,
+        temMedicamento: temMedicamento,
+        medicamento: temMedicamento === 'sim' ? medicamento : null,
+        reside: formData.reside,
+        respNome: formData.respNome,
+        respTelefone: formData.respTelefone,
+        pessoasAutorizadas: formData.pessoasAutorizadas,
+        alunoId
+      });
+
+      Alert.alert('Sucesso', 'Cadastro completo realizado!');
+      clearStore();
+      router.push('/home');
+
     } catch (error) {
-      console.error('Erro ao enviar os dados:', error);
-      alert('Erro ao enviar os dados. Tente novamente.');
+      let errorMessage = 'Erro no cadastro:';
+      if (isAxiosError(error)) {
+        errorMessage += `\n${error.response?.data?.message || error.message}`;
+        console.error('Endpoint:', error.config?.url);
+        console.error('Payload:', error.config?.data);
+      }
+      Alert.alert('Erro', errorMessage);
+      console.error('Detalhes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Observações</Text>
+      {step === 1 ? (
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Observações</Text>
 
-        {/* Matrícula */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Matrícula</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.matriculaTipo}
-              onValueChange={(v) => handleChange('matriculaTipo', v)}
-              dropdownIconColor="#666">
-              <Picker.Item label="Selecione" value="" />
-              <Picker.Item label="Inicial" value="inicial" />
-              <Picker.Item label="Transferência Municipal/Estadual" value="transferencia_municipal_estadual" />
-              <Picker.Item label="Transferência Particular" value="transferencia_particular" />
-            </Picker>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tipo de Matrícula</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={matriculaTipo}
+                  onValueChange={setMatriculaTipo}
+                  dropdownIconColor="#666">
+                  <Picker.Item label="Selecione" value="" />
+                  <Picker.Item label="Inicial" value="inicial" />
+                  <Picker.Item label="Transferência Municipal/Estadual" value="transferencia_municipal_estadual" />
+                  <Picker.Item label="Transferência Particular" value="transferencia_particular" />
+                </Picker>
+              </View>
+              {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nome da Escola Anterior"
+                  value={escola}
+                  onChangeText={setEscola}
+                />
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Possui Irmãos?</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={temIrmaos}
+                  onValueChange={setTemIrmaos}
+                  dropdownIconColor="#666">
+                  <Picker.Item label="Selecione" value="" />
+                  <Picker.Item label="Sim" value="sim" />
+                  <Picker.Item label="Não" value="não" />
+                </Picker>
+              </View>
+              {temIrmaos === 'sim' && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Nomes dos Irmãos (separados por vírgula)"
+                  value={irmaosNome}
+                  onChangeText={setIrmaosNome}
+                />
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Faz Acompanhamento Especializado?</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={temEspecialista}
+                  onValueChange={setTemEspecialista}
+                  dropdownIconColor="#666">
+                  <Picker.Item label="Selecione" value="" />
+                  <Picker.Item label="Sim" value="sim" />
+                  <Picker.Item label="Não" value="não" />
+                </Picker>
+              </View>
+              {temEspecialista === 'sim' && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Tipo de Acompanhamento"
+                  value={especialista}
+                  onChangeText={setEspecialista}
+                />
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Possui Alergias?</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={temAlergias}
+                  onValueChange={setTemAlergias}
+                  dropdownIconColor="#666">
+                  <Picker.Item label="Selecione" value="" />
+                  <Picker.Item label="Sim" value="sim" />
+                  <Picker.Item label="Não" value="não" />
+                </Picker>
+              </View>
+              {temAlergias === 'sim' && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Descrição das Alergias"
+                  value={alergia}
+                  onChangeText={setAlergia}
+                />
+              )}
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Faz Uso de Medicamentos?</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={temMedicamento}
+                  onValueChange={setTemMedicamento}
+                  dropdownIconColor="#666">
+                  <Picker.Item label="Selecione" value="" />
+                  <Picker.Item label="Sim" value="sim" />
+                  <Picker.Item label="Não" value="não" />
+                </Picker>
+              </View>
+              {temMedicamento === 'sim' && (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Medicamentos em Uso"
+                  value={medicamento}
+                  onChangeText={setMedicamento}
+                />
+              )}
+            </View>
           </View>
-          {(formData.escola === 'transferencia_municipal_estadual' || formData.escola === 'transferencia_particular') && (
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleNextStep}
+            disabled={loading}>
+            <Text style={styles.buttonText}>Próximo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/forms-paterno')}
+            style={styles.backButton}
+          >
+            <Text style={styles.backLink}>Voltar</Text>
+          </TouchableOpacity>
+        </>
+      ) : (
+        <>
+          <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Responsável Financeiro</Text>
+          <View style={styles.row}>
             <TextInput
               style={styles.input}
-              placeholder="Qual Escola"
-              value={formData.escola}
-              onChangeText={(v) => handleChange('escola', v)}
+              placeholder="Nome Completo"
+              value={formData.respNome}
+              onChangeText={(v) => handleChange('respNome', v)}
             />
-          )}
-        </View>
-
-        {/* Irmão(s) */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Irmão(s)</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.temIrmaos}
-              onValueChange={(v) => handleChange('temIrmaos', v)}
-              dropdownIconColor="#666">
-              <Picker.Item label="Selecione" value="" />
-              <Picker.Item label="Sim" value="sim" />
-              <Picker.Item label="Não" value="nao" />
-            </Picker>
-          </View>
-          {formData.irmaosNome === 'sim' && (
-            <TextInput
+            <MaskInput
               style={styles.input}
-              placeholder="Qual(s) Irmão(s)?"
-              value={formData.irmaosNome}
-              onChangeText={(v) => handleChange('irmaosNome', v)}
+              placeholder="Telefone (00) 00000-0000"
+              value={formData.respTelefone}
+              onChangeText={(v) => handleChange('respTelefone', v)}
+              mask={telefoneMask}
+              keyboardType="phone-pad"
             />
-          )}
-        </View>
-
-        {/* Especialista */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Especialista</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.temEspecialista}
-              onValueChange={(v) => handleChange('temEspecialista', v)}
-              dropdownIconColor="#666">
-              <Picker.Item label="Selecione" value="" />
-              <Picker.Item label="Sim" value="sim" />
-              <Picker.Item label="Não" value="nao" />
-            </Picker>
           </View>
-          {formData.temEspecialista === 'sim' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Neurologista, Fonoaudiólogo"
-              value={formData.especialista}
-              onChangeText={(v) => handleChange('especialista', v)}
-            />
-          )}
         </View>
 
-        {/* Alergias */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Alergias</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.temAlergias}
-              onValueChange={(v) => handleChange('temAlergias', v)}
-              dropdownIconColor="#666">
-              <Picker.Item label="Selecione" value="" />
-              <Picker.Item label="Sim" value="sim" />
-              <Picker.Item label="Não" value="nao" />
-            </Picker>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Autorizados para Buscar</Text>
+          <TextInput
+            style={[styles.inputFull, { height: 80 }]}
+            placeholder="Pessoas autorizadas (Nome completo e documento)"
+            value={formData.pessoasAutorizadas}
+            onChangeText={(v) => handleChange('pessoasAutorizadas', v)}
+            multiline
+          />
+        </View>
+
+        {/* Botão Finalizar primeiro */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleSubmit}
+          disabled={loading}>
+          {loading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.buttonText}>Finalizar Cadastro</Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Seção de Observações depois do botão Finalizar */}
+        <View style={styles.section}>
+          <Text style={styles.obsTitle}>OBSERVAÇÕES IMPORTANTES:</Text>
+          <View style={styles.obsContainer}>
+            <Text style={styles.obsText}>
+              ✓ Só clique em &quot;Enviar Documentos&quot; se for enviar por e-mail{"\n"}
+              ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
+              ☑ Clique apenas se a escola solicitar envio digital
+            </Text>
+            <TouchableOpacity
+              style={styles.emailButton}
+              onPress={handleEmail}
+            >
+              <Text style={styles.emailButtonText}>Enviar Documentos</Text>
+            </TouchableOpacity>
           </View>
-          {formData.alergia === 'sim' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Alimentação, Remédios..."
-              value={formData.alergia}
-              onChangeText={(v) => handleChange('alergia', v)}
-            />
-          )}
         </View>
 
-        {/* Medicamento em Uso */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Medicamento em Uso</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={formData.temMedicamento}
-              onValueChange={(v) => handleChange('temMedicamento', v)}
-              dropdownIconColor="#666">
-              <Picker.Item label="Selecione" value="" />
-              <Picker.Item label="Sim" value="sim" />
-              <Picker.Item label="Não" value="nao" />
-            </Picker>
-          </View>
-          {formData.medicamento === 'sim' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Qual medicamento?"
-              value={formData.medicamento}
-              onChangeText={(v) => handleChange('medicamento', v)}
-            />
-          )}
-        </View>
-      </View>
+        {/* Botão Anterior depois das Observações */}
+        <TouchableOpacity
+          style={[styles.button, styles.backButtonStep2]}
+          onPress={() => setStep(1)}
+          disabled={loading}>
+          <Text style={styles.buttonText}>Anterior</Text>
+        </TouchableOpacity>
 
-      {/* Botões */}
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleSubmit}
-      >
-        <Text style={styles.buttonText}>Próximo</Text>
-      </TouchableOpacity>
-
-      <Link href="/forms-paterno" style={styles.backLink}>
-        Voltar
-      </Link>
+        {/* Botão Voltar no final */}
+        <TouchableOpacity
+          onPress={() => router.push('/home')}
+          style={styles.backButton}
+        >
+          <Text style={styles.backLink}>Voltar à Página Principal</Text>
+        </TouchableOpacity>
+      </>
+      )}
     </ScrollView>
   );
-}
+};
 
-// Estilos idênticos aos formulários anteriores
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
@@ -218,30 +427,89 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   input: {
-    height: 40,
+    height: 48,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: '#fff',
-    marginTop: 10,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    fontSize: 16,
+  },
+  inputFull: {
+    width: '100%',
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    backgroundColor: '#ffffff',
+    fontSize: 16,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
   },
   button: {
     backgroundColor: '#8B0000',
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: 6,
+    padding: 16,
     alignItems: 'center',
-    marginVertical: 15,
+    marginVertical: 8,
+  },
+  backButtonStep2: {
+    backgroundColor: '#902121',
+  },
+  buttonContainer: {
+    flexDirection: 'column-reverse',
+    gap: 12,
+    marginTop: 16,
   },
   buttonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+  },
+  backButton: {
+    marginTop: 20,
+    alignSelf: 'center',
   },
   backLink: {
     color: '#902121',
     textAlign: 'center',
-    marginTop: 10,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
+  obsTitle: {
+    color: '#902121',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 15,
+  },
+  obsContainer: {
+    backgroundColor: '#fff8e1',
+    borderRadius: 8,
+    padding: 15,
+    borderWidth: 1,
+    borderColor: '#ffe082',
+  },
+  obsText: {
+    color: '#666',
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 15,
+  },
+  emailButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 6,
+    padding: 12,
+    alignItems: 'center',
+  },
+  emailButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });
+
+export default FormularioCompleto;
