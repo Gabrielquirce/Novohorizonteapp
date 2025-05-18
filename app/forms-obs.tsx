@@ -311,6 +311,18 @@ const FormularioCompleto = () => {
         </>
       ) : (
         <>
+        
+             <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Composição Familiar</Text>
+            <TextInput
+              style={styles.inputFull}
+              placeholder="Com quem reside (Ex: Pai, Mãe, Avós)"
+              value={formData.reside}
+              onChangeText={(v) => handleChange('reside', v)}
+            />
+          </View>
+
+
           <View style={styles.section}>
           <Text style={styles.sectionTitle}>Responsável Financeiro</Text>
           <View style={styles.row}>
