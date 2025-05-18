@@ -1,10 +1,33 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { GestureResponderEvent, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  BackHandler,
+  GestureResponderEvent,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 export default function HomeScreen() {
   function confirmExit(event: GestureResponderEvent): void {
-    throw new Error('Function not implemented.');
+    Alert.alert(
+      'Sair',
+      'Deseja realmente sair do aplicativo?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        { 
+          text: 'Sair', 
+          onPress: () => BackHandler.exitApp() 
+        },
+      ]
+    );
   }
 
   return (
@@ -55,15 +78,12 @@ export default function HomeScreen() {
           <Text style={styles.cardSubtitle}>Informações sobre os desenvolvedores do projeto</Text>
         </TouchableOpacity>
 
-      
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={confirmExit}
         >
           <Text style={styles.logoutText}>Sair</Text>
         </TouchableOpacity>
-
-
       </ScrollView>
     </View>
   );
@@ -123,6 +143,5 @@ const styles = StyleSheet.create({
     color: '#902121',
     fontSize: 20,
     fontWeight: 'bold',
-
   }
 });
