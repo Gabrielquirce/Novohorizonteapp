@@ -47,7 +47,7 @@ const FormularioCompleto = () => {
     Linking.openURL(
       `mailto:vanessalimapsicopedagoga@bol.com.br?` +
       `subject=Envio de Documentos - ${aluno.nome}&` +
-      `body=Segue em anexo os documentos necessários para matrícula de ${aluno.nome}`
+      `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
     );
   };
 
@@ -179,120 +179,133 @@ const FormularioCompleto = () => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {step === 1 ? (
-        <>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Observações</Text>
+        <View style={styles.stepContainer}>
+          <Text style={styles.sectionTitle}>Observações</Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Tipo de Matrícula</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={matriculaTipo}
-                  onValueChange={setMatriculaTipo}
-                  dropdownIconColor="#666">
-                  <Picker.Item label="Selecione" value="" />
-                  <Picker.Item label="Inicial" value="inicial" />
-                  <Picker.Item label="Transferência Municipal/Estadual" value="transferencia_municipal_estadual" />
-                  <Picker.Item label="Transferência Particular" value="transferencia_particular" />
-                </Picker>
-              </View>
-              {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Tipo de Matrícula</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={matriculaTipo}
+                onValueChange={setMatriculaTipo}
+                dropdownIconColor="#666">
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Inicial" value="inicial" />
+                <Picker.Item label="Transferência Municipal/Estadual" value="transferencia_municipal_estadual" />
+                <Picker.Item label="Transferência Particular" value="transferencia_particular" />
+              </Picker>
+            </View>
+            {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
+              <>
+                <Text style={styles.label}>Nome da Escola Anterior</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Nome da Escola Anterior"
+                  placeholder="Digite o nome da escola"
                   value={escola}
                   onChangeText={setEscola}
                 />
-              )}
-            </View>
+              </>
+            )}
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Possui Irmãos?</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={temIrmaos}
-                  onValueChange={setTemIrmaos}
-                  dropdownIconColor="#666">
-                  <Picker.Item label="Selecione" value="" />
-                  <Picker.Item label="Sim" value="sim" />
-                  <Picker.Item label="Não" value="não" />
-                </Picker>
-              </View>
-              {temIrmaos === 'sim' && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Possui Irmãos?</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={temIrmaos}
+                onValueChange={setTemIrmaos}
+                dropdownIconColor="#666">
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Sim" value="sim" />
+                <Picker.Item label="Não" value="não" />
+              </Picker>
+            </View>
+            {temIrmaos === 'sim' && (
+              <>
+                <Text style={styles.label}>Nomes dos Irmãos</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Nomes dos Irmãos (separados por vírgula)"
+                  placeholder="Separe por vírgulas"
                   value={irmaosNome}
                   onChangeText={setIrmaosNome}
                 />
-              )}
-            </View>
+              </>
+            )}
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Faz Acompanhamento Especializado?</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={temEspecialista}
-                  onValueChange={setTemEspecialista}
-                  dropdownIconColor="#666">
-                  <Picker.Item label="Selecione" value="" />
-                  <Picker.Item label="Sim" value="sim" />
-                  <Picker.Item label="Não" value="não" />
-                </Picker>
-              </View>
-              {temEspecialista === 'sim' && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Acompanhamento Especializado</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={temEspecialista}
+                onValueChange={setTemEspecialista}
+                dropdownIconColor="#666">
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Sim" value="sim" />
+                <Picker.Item label="Não" value="não" />
+              </Picker>
+            </View>
+            {temEspecialista === 'sim' && (
+              <>
+                <Text style={styles.label}>Tipo de Acompanhamento</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Tipo de Acompanhamento"
+                  placeholder="Descreva o acompanhamento"
                   value={especialista}
                   onChangeText={setEspecialista}
                 />
-              )}
-            </View>
+              </>
+            )}
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Possui Alergias?</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={temAlergias}
-                  onValueChange={setTemAlergias}
-                  dropdownIconColor="#666">
-                  <Picker.Item label="Selecione" value="" />
-                  <Picker.Item label="Sim" value="sim" />
-                  <Picker.Item label="Não" value="não" />
-                </Picker>
-              </View>
-              {temAlergias === 'sim' && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Possui Alergias?</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={temAlergias}
+                onValueChange={setTemAlergias}
+                dropdownIconColor="#666">
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Sim" value="sim" />
+                <Picker.Item label="Não" value="não" />
+              </Picker>
+            </View>
+            {temAlergias === 'sim' && (
+              <>
+                <Text style={styles.label}>Descrição das Alergias</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Descrição das Alergias"
+                  placeholder="Descreva as alergias"
                   value={alergia}
                   onChangeText={setAlergia}
                 />
-              )}
-            </View>
+              </>
+            )}
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Faz Uso de Medicamentos?</Text>
-              <View style={styles.pickerContainer}>
-                <Picker
-                  selectedValue={temMedicamento}
-                  onValueChange={setTemMedicamento}
-                  dropdownIconColor="#666">
-                  <Picker.Item label="Selecione" value="" />
-                  <Picker.Item label="Sim" value="sim" />
-                  <Picker.Item label="Não" value="não" />
-                </Picker>
-              </View>
-              {temMedicamento === 'sim' && (
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Uso de Medicamentos</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={temMedicamento}
+                onValueChange={setTemMedicamento}
+                dropdownIconColor="#666">
+                <Picker.Item label="Selecione" value="" />
+                <Picker.Item label="Sim" value="sim" />
+                <Picker.Item label="Não" value="não" />
+              </Picker>
+            </View>
+            {temMedicamento === 'sim' && (
+              <>
+                <Text style={styles.label}>Medicamentos em Uso</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Medicamentos em Uso"
+                  placeholder="Liste os medicamentos"
                   value={medicamento}
                   onChangeText={setMedicamento}
                 />
-              )}
-            </View>
+              </>
+            )}
           </View>
 
           <TouchableOpacity
@@ -304,72 +317,56 @@ const FormularioCompleto = () => {
 
           <TouchableOpacity
             onPress={() => router.push('/forms-paterno')}
-            style={styles.backButton}
-          >
+            style={styles.backButton}>
             <Text style={styles.backLink}>Voltar</Text>
           </TouchableOpacity>
-        </>
+        </View>
       ) : (
-        <>
-
-             <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Composição Familiar</Text>
+        <View style={styles.stepContainer}>
+          <Text style={styles.sectionTitle}>Composição Familiar</Text>
+          
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Reside com</Text>
             <TextInput
-              style={styles.inputFull}
-              placeholder="Com quem reside (Ex: Pai, Mãe, Avós)"
+              style={styles.input}
+              placeholder="Ex: Pai, Mãe, Avós"
               value={formData.reside}
               onChangeText={(v) => handleChange('reside', v)}
             />
           </View>
 
-
-          <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Responsável Financeiro</Text>
-          <View style={styles.row}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Responsável Financeiro</Text>
             <TextInput
               style={styles.input}
               placeholder="Nome Completo"
               value={formData.respNome}
               onChangeText={(v) => handleChange('respNome', v)}
             />
+            <Text style={styles.label}>Telefone</Text>
             <MaskInput
               style={styles.input}
-              placeholder="Telefone (00) 00000-0000"
+              placeholder="(00) 00000-0000"
               value={formData.respTelefone}
               onChangeText={(v) => handleChange('respTelefone', v)}
               mask={telefoneMask}
               keyboardType="phone-pad"
             />
           </View>
-        </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Autorizados para Buscar</Text>
-          <TextInput
-            style={[styles.inputFull, { height: 80 }]}
-            placeholder="Pessoas autorizadas (Nome completo e documento)"
-            value={formData.pessoasAutorizadas}
-            onChangeText={(v) => handleChange('pessoasAutorizadas', v)}
-            multiline
-          />
-        </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Autorizados para Buscar</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              placeholder="Nome completo e documento"
+              value={formData.pessoasAutorizadas}
+              onChangeText={(v) => handleChange('pessoasAutorizadas', v)}
+              multiline
+            />
+          </View>
 
-        {/* Botão Finalizar primeiro */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSubmit}
-          disabled={loading}>
-          {loading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text style={styles.buttonText}>Finalizar Cadastro</Text>
-          )}
-        </TouchableOpacity>
-
-        {/* Seção de Observações depois do botão Finalizar */}
-        <View style={styles.section}>
-          <Text style={styles.obsTitle}>OBSERVAÇÕES IMPORTANTES:</Text>
           <View style={styles.obsContainer}>
+            <Text style={styles.obsTitle}>OBSERVAÇÕES IMPORTANTES:</Text>
             <Text style={styles.obsText}>
               ✓ Só clique em &quot;Enviar Documentos&quot; se for enviar por e-mail{"\n"}
               ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
@@ -377,29 +374,34 @@ const FormularioCompleto = () => {
             </Text>
             <TouchableOpacity
               style={styles.emailButton}
-              onPress={handleEmail}
-            >
+              onPress={handleEmail}>
               <Text style={styles.emailButtonText}>Enviar Documentos</Text>
             </TouchableOpacity>
           </View>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSubmit}
+            disabled={loading}>
+            {loading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Finalizar Cadastro</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.secondaryButton]}
+            onPress={() => setStep(1)}>
+            <Text style={styles.buttonText}>Anterior</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/home')}
+            style={styles.backButton}>
+            <Text style={styles.backLink}>Voltar à Página Principal</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Botão Anterior depois das Observações */}
-        <TouchableOpacity
-          style={[styles.button, styles.backButtonStep2]}
-          onPress={() => setStep(1)}
-          disabled={loading}>
-          <Text style={styles.buttonText}>Anterior</Text>
-        </TouchableOpacity>
-
-        {/* Botão Voltar no final */}
-        <TouchableOpacity
-          onPress={() => router.push('/home')}
-          style={styles.backButton}
-        >
-          <Text style={styles.backLink}>Voltar à Página Principal</Text>
-        </TouchableOpacity>
-      </>
       )}
     </ScrollView>
   );
@@ -409,45 +411,32 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: '#f5f5f5',
-    padding: 20,
+    padding: 16,
   },
-  section: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 20,
-    elevation: 3,
+  stepContainer: {
+    gap: 20,
   },
   sectionTitle: {
     color: '#902121',
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    marginBottom: 15,
+    marginBottom: 8,
   },
   inputGroup: {
-    marginBottom: 20,
+    gap: 8,
   },
   label: {
-    color: '#666',
+    color: '#444',
     fontSize: 14,
-    marginBottom: 8,
+    fontWeight: '500',
   },
   pickerContainer: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 6,
-    paddingHorizontal: 12,
-    backgroundColor: '#ffffff',
-    fontSize: 16,
+    overflow: 'hidden',
   },
-  inputFull: {
+  input: {
     width: '100%',
     height: 48,
     borderWidth: 1,
@@ -457,25 +446,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     fontSize: 16,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+  multilineInput: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   button: {
     backgroundColor: '#8B0000',
     borderRadius: 6,
     padding: 16,
     alignItems: 'center',
-    marginVertical: 8,
+    marginTop: 8,
   },
-  backButtonStep2: {
+  secondaryButton: {
     backgroundColor: '#902121',
-  },
-  buttonContainer: {
-    flexDirection: 'column-reverse',
-    gap: 12,
-    marginTop: 16,
+    marginTop: 12,
   },
   buttonText: {
     color: 'white',
@@ -483,33 +467,31 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   backButton: {
-    marginTop: 20,
+    marginTop: 16,
     alignSelf: 'center',
   },
   backLink: {
     color: '#902121',
-    textAlign: 'center',
-    fontSize: 18,
-    
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  obsContainer: {
+    backgroundColor: '#fff8e1',
+    borderRadius: 6,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#ffe082',
+    gap: 12,
   },
   obsTitle: {
     color: '#902121',
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 15,
-  },
-  obsContainer: {
-    backgroundColor: '#fff8e1',
-    borderRadius: 8,
-    padding: 15,
-    borderWidth: 1,
-    borderColor: '#ffe082',
+    fontWeight: '600',
   },
   obsText: {
     color: '#666',
     fontSize: 14,
     lineHeight: 20,
-    marginBottom: 15,
   },
   emailButton: {
     backgroundColor: '#8B0000',

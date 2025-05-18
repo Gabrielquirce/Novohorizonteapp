@@ -105,13 +105,10 @@ export default function RegisterScreen() {
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    validateField.flush(); // Valida campos
+    validateField.flush();
   
     if (Object.keys(errors).length === 0) {
-      // ✅ Salva no estado global
       useFormStore.getState().setAluno(formData);
-      
-      // ➡️ Navega sem fazer POST
       router.push('/forms-materno');
     } else {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios');
@@ -167,144 +164,152 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.form}>
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              placeholder="Nome"
-              value={formData.nome}
-              onChangeText={(v) => handleChange('nome', v)}
-              importantForAutofill="yes"
-            />
-            <MaskInput
-              style={styles.input}
-              placeholder="Data de Nascimento"
-              value={formData.dataNascimento}
-              onChangeText={(v) => handleChange('dataNascimento', v)}
-              mask={dataMask}
-              keyboardType="number-pad"
-            />
-            {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
-          </View>
-
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              placeholder="Naturalidade"
-              value={formData.naturalidade}
-              onChangeText={(v) => handleChange('naturalidade', v)}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Nacionalidade"
-              value={formData.nacionalidade}
-              onChangeText={(v) => handleChange('nacionalidade', v)}
-            />
-          </View>
-
-          <View style={styles.row}>
-            <MaskInput
-              style={styles.input}
-              placeholder="CPF"
-              value={formData.cpf}
-              onChangeText={(v) => handleChange('cpf', v)}
-              mask={cpfMask}
-              keyboardType="number-pad"
-            />
-            {renderPicker({
-              field: 'sexo',
-              items: [
-                { label: 'Masculino', value: 'M' },
-                { label: 'Feminino', value: 'F' },
-                { label: 'Não-binário', value: 'Não-binário' },
-                { label: 'Prefiro não informar', value: 'Prefiro não informar' },
-                { label: 'Outro', value: 'Outro' }
-              ],
-              placeholder: 'Selecione o Sexo'
-            })}
-          </View>
-
-          <View style={styles.row}>
-            <MaskInput
-              style={styles.input}
-              placeholder="RG"
-              value={formData.rg}
-              onChangeText={(v) => handleChange('rg', v)}
-              mask={rgMask}
-              keyboardType="number-pad"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Ano Letivo"
-              value={formData.anoLetivo}
-              onChangeText={(v) => handleChange('anoLetivo', v)}
-              keyboardType="number-pad"
-            />
-            {errors.rg && <Text style={styles.errorText}>{errors.rg}</Text>}
-          </View>
-
-          <View style={styles.row}>
-            <TextInput
-              style={styles.input}
-              placeholder="Termo"
-              value={formData.termo}
-              onChangeText={(v) => handleChange('termo', v)}
-              keyboardType="number-pad"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Folha"
-              value={formData.folha}
-              onChangeText={(v) => handleChange('folha', v)}
-              keyboardType="number-pad"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Livro"
-              value={formData.livro}
-              onChangeText={(v) => handleChange('livro', v)}
-              keyboardType="number-pad"
-            />
-          </View>
-
+          <Text style={styles.label}>Nome</Text>
           <TextInput
-            style={styles.inputFull}
-            placeholder="Matrícula"
+            style={styles.input}
+            placeholder=""
+            value={formData.nome}
+            onChangeText={(v) => handleChange('nome', v)}
+            importantForAutofill="yes"
+          />
+          {errors.nome && <Text style={styles.errorText}>{errors.nome}</Text>}
+
+          <Text style={styles.label}>Data de Nascimento</Text>
+          <MaskInput
+            style={styles.input}
+            placeholder="00/00/0000"
+            value={formData.dataNascimento}
+            onChangeText={(v) => handleChange('dataNascimento', v)}
+            mask={dataMask}
+            keyboardType="number-pad"
+          />
+          {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
+
+          <Text style={styles.label}>Naturalidade</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Teresopolitano"
+            value={formData.naturalidade}
+            onChangeText={(v) => handleChange('naturalidade', v)}
+          />
+
+          <Text style={styles.label}>Nacionalidade</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Brasileira"
+            value={formData.nacionalidade}
+            onChangeText={(v) => handleChange('nacionalidade', v)}
+          />
+
+          <Text style={styles.label}>Sexo</Text>
+          {renderPicker({
+            field: 'sexo',
+            items: [
+              { label: 'Masculino', value: 'M' },
+              { label: 'Feminino', value: 'F' },
+              { label: 'Não-binário', value: 'Não-binário' },
+              { label: 'Outro', value: 'Outro' },
+              { label: 'Prefiro não informar', value: 'Prefiro não informar' },
+            ],
+            placeholder: 'Selecione'
+          })}
+
+          <Text style={styles.label}>CPF</Text>
+          <MaskInput
+            style={styles.input}
+            placeholder="000.000.000-00"
+            value={formData.cpf}
+            onChangeText={(v) => handleChange('cpf', v)}
+            mask={cpfMask}
+            keyboardType="number-pad"
+          />
+          {errors.cpf && <Text style={styles.errorText}>{errors.cpf}</Text>}
+
+          <Text style={styles.label}>RG</Text>
+          <MaskInput
+            style={styles.input}
+            placeholder="00.000.000-0"
+            value={formData.rg}
+            onChangeText={(v) => handleChange('rg', v)}
+            mask={rgMask}
+            keyboardType="number-pad"
+          />
+          {errors.rg && <Text style={styles.errorText}>{errors.rg}</Text>}
+
+          <Text style={styles.label}>Termo</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Número do termo"
+            value={formData.termo}
+            onChangeText={(v) => handleChange('termo', v)}
+            keyboardType="number-pad"
+          />
+
+          <Text style={styles.label}>Folha</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Número da folha"
+            value={formData.folha}
+            onChangeText={(v) => handleChange('folha', v)}
+            keyboardType="number-pad"
+          />
+
+          <Text style={styles.label}>Livro</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Número do livro"
+            value={formData.livro}
+            onChangeText={(v) => handleChange('livro', v)}
+            keyboardType="number-pad"
+          />
+
+          <Text style={styles.label}>Matrícula</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Número da matrícula"
             value={formData.matricula}
             onChangeText={(v) => handleChange('matricula', v)}
             keyboardType="number-pad"
           />
 
-          <View style={[styles.row, styles.pickerRow]}>
-            {renderPicker({
-              field: 'turno',
-              items: [
-                { label: 'Manhã', value: 'Manhã' },
-                { label: 'Tarde', value: 'Tarde' },
-                { label: 'Integral', value: 'Integral' }
-              ],
-              placeholder: 'Selecione o Turno'
-            })}
+          <Text style={styles.label}>Turno</Text>
+          {renderPicker({
+            field: 'turno',
+            items: [
+              { label: 'Manhã', value: 'Manhã' },
+              { label: 'Tarde', value: 'Tarde' },
+              { label: 'Integral', value: 'Integral' }
+            ],
+            placeholder: 'Selecione o Turno'
+          })}
 
-            {renderPicker({
-              field: 'tipoSanguineo',
-              items: [
-                { label: 'A+', value: 'A+' },
-                { label: 'A-', value: 'A-' },
-                { label: 'B+', value: 'B+' },
-                { label: 'O+', value: 'O+' },
-                { label: 'O-', value: 'O-' },
-                { label: 'AB+', value: 'AB+' },
-                { label: 'AB-', value: 'AB-' }
-              ],
-              placeholder: 'Tipo Sanguíneo'
-            })}
+          <Text style={styles.label}>Tipo Sanguíneo</Text>
+          {renderPicker({
+            field: 'tipoSanguineo',
+            items: [
+              { label: 'A+', value: 'A+' },
+              { label: 'A-', value: 'A-' },
+              { label: 'B+', value: 'B+' },
+              { label: 'O+', value: 'O+' },
+              { label: 'O-', value: 'O-' },
+              { label: 'AB+', value: 'AB+' },
+              { label: 'AB-', value: 'AB-' }
+            ],
+            placeholder: 'Selecione o Tipo Sanguíneo'
+          })}
 
-            {renderPicker({
-              field: 'raca',
-              items: racasOptions,
-              placeholder: 'Selecione a Raça'
-            })}
-          </View>
+          <Text style={styles.label}>Raça</Text>
+          {renderPicker({
+            field: 'raca',
+            items: [
+              { label: 'Amarela', value: 'Amarela' },
+              { label: 'Branca', value: 'Branca' },
+              { label: 'Indígena', value: 'Indígena' },
+              { label: 'Parda', value: 'Parda' },
+              { label: 'Preta', value: 'Preta' },
+            ],
+            placeholder: 'Selecione a Raça'
+          })}
 
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
@@ -354,26 +359,15 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     elevation: 2,
+    gap: 16,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
-  },
-  pickerRow: {
-    flexWrap: 'wrap',
+  label: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 4,
+    fontWeight: '500',
   },
   input: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#ffffff',
-  },
-  inputFull: {
     width: '100%',
     height: 48,
     borderWidth: 1,
@@ -382,11 +376,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   pickerContainer: {
-    flex: 1,
-    minWidth: '48%',
+    width: '100%',
     borderWidth: 1,
     borderColor: '#e0e0e0',
     borderRadius: 6,
@@ -423,6 +416,6 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     fontSize: 12,
     marginTop: 4,
-    marginLeft: 4,
+    marginBottom: 8,
   },
 });

@@ -162,137 +162,144 @@ export default function FamiliaresPaternoScreen() {
         <View style={[styles.form, !hasResponsavelPaterno && styles.formDisabled]}>
           <Text style={styles.sectionTitle}>Dados do Responsável Paterno</Text>
 
+          <Text style={styles.label}>Nome Completo</Text>
           <TextInput
-            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
-            placeholder="Nome completo"
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Carlos Silva"
             value={formData.nomePai}
             onChangeText={(v) => handleChange('nomePai', v)}
             editable={hasResponsavelPaterno}
           />
+          {errors.nomePai && <Text style={styles.errorText}>{errors.nomePai}</Text>}
 
-          <View style={styles.row}>
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="CEP"
-              value={formData.cepPai}
-              onChangeText={(v) => handleChange('cepPai', v)}
-              mask={cepMask}
-              keyboardType="number-pad"
-              editable={hasResponsavelPaterno}
-            />
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="Telefone"
-              value={formData.telefonePai}
-              onChangeText={(v) => handleChange('telefonePai', v)}
-              mask={telefoneMask}
-              keyboardType="phone-pad"
-              editable={hasResponsavelPaterno}
-            />
-          </View>
+          <Text style={styles.label}>CEP</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="00000-000"
+            value={formData.cepPai}
+            onChangeText={(v) => handleChange('cepPai', v)}
+            mask={cepMask}
+            keyboardType="number-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.cepPai && <Text style={styles.errorText}>{errors.cepPai}</Text>}
 
+          <Text style={styles.label}>Telefone</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="(00) 00000-0000"
+            value={formData.telefonePai}
+            onChangeText={(v) => handleChange('telefonePai', v)}
+            mask={telefoneMask}
+            keyboardType="phone-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.telefonePai && <Text style={styles.errorText}>{errors.telefonePai}</Text>}
+
+          <Text style={styles.label}>Local de Trabalho</Text>
           <TextInput
-            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
-            placeholder="Local de trabalho"
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Empresa ABC"
             value={formData.trabalhoPai}
             onChangeText={(v) => handleChange('trabalhoPai', v)}
             editable={hasResponsavelPaterno}
           />
 
-          <View style={styles.row}>
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="Data de nascimento"
-              value={formData.nascimentoPai}
-              onChangeText={(v) => handleChange('nascimentoPai', v)}
-              mask={dataMask}
-              keyboardType="number-pad"
-              editable={hasResponsavelPaterno}
-            />
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="CPF"
-              value={formData.cpfPai}
-              onChangeText={(v) => handleChange('cpfPai', v)}
-              mask={cpfMask}
-              keyboardType="number-pad"
-              editable={hasResponsavelPaterno}
-            />
-          </View>
+          <Text style={styles.label}>Data de Nascimento</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="00/00/0000"
+            value={formData.nascimentoPai}
+            onChangeText={(v) => handleChange('nascimentoPai', v)}
+            mask={dataMask}
+            keyboardType="number-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.nascimentoPai && <Text style={styles.errorText}>{errors.nascimentoPai}</Text>}
 
+          <Text style={styles.label}>CPF</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="000.000.000-00"
+            value={formData.cpfPai}
+            onChangeText={(v) => handleChange('cpfPai', v)}
+            mask={cpfMask}
+            keyboardType="number-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.cpfPai && <Text style={styles.errorText}>{errors.cpfPai}</Text>}
+
+          <Text style={styles.label}>E-mail</Text>
           <TextInput
-            style={[styles.inputFull, !hasResponsavelPaterno && styles.disabledInput]}
-            placeholder="E-mail"
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="carlos@email.com"
             value={formData.emailPai}
             onChangeText={(v) => handleChange('emailPai', v)}
             keyboardType="email-address"
             autoCapitalize="none"
             editable={hasResponsavelPaterno}
           />
+          {errors.emailPai && <Text style={styles.errorText}>{errors.emailPai}</Text>}
 
-          <View style={styles.row}>
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="Telefone do trabalho"
-              value={formData.telefoneTrabalhoPai}
-              onChangeText={(v) => handleChange('telefoneTrabalhoPai', v)}
-              mask={telefoneMask}
-              keyboardType="phone-pad"
-              editable={hasResponsavelPaterno}
-            />
-            <TextInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="Endereço completo"
-              value={formData.enderecoPai}
-              onChangeText={(v) => handleChange('enderecoPai', v)}
-              editable={hasResponsavelPaterno}
-            />
-          </View>
+          <Text style={styles.label}>Telefone do Trabalho</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="(00) 00000-0000"
+            value={formData.telefoneTrabalhoPai}
+            onChangeText={(v) => handleChange('telefoneTrabalhoPai', v)}
+            mask={telefoneMask}
+            keyboardType="phone-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.telefoneTrabalhoPai && <Text style={styles.errorText}>{errors.telefoneTrabalhoPai}</Text>}
 
-          <View style={styles.row}>
-            <MaskInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="RG"
-              value={formData.rgPai}
-              onChangeText={(v) => handleChange('rgPai', v)}
-              mask={rgMask}
-              keyboardType="number-pad"
-              editable={hasResponsavelPaterno}
-            />
-            <TextInput
-              style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
-              placeholder="Profissão"
-              value={formData.profissaoPai}
-              onChangeText={(v) => handleChange('profissaoPai', v)}
-              editable={hasResponsavelPaterno}
-            />
-          </View>
+          <Text style={styles.label}>Endereço Completo</Text>
+          <TextInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Avenida Principal, 456"
+            value={formData.enderecoPai}
+            onChangeText={(v) => handleChange('enderecoPai', v)}
+            editable={hasResponsavelPaterno}
+          />
 
-          {Object.entries(errors).map(([field, message]) => (
-            <Text key={field} style={styles.errorText}>
-              {message}
-            </Text>
-          ))}
+          <Text style={styles.label}>RG</Text>
+          <MaskInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="00.000.000-0"
+            value={formData.rgPai}
+            onChangeText={(v) => handleChange('rgPai', v)}
+            mask={rgMask}
+            keyboardType="number-pad"
+            editable={hasResponsavelPaterno}
+          />
+          {errors.rgPai && <Text style={styles.errorText}>{errors.rgPai}</Text>}
+
+          <Text style={styles.label}>Profissão</Text>
+          <TextInput
+            style={[styles.input, !hasResponsavelPaterno && styles.disabledInput]}
+            placeholder="Engenheiro"
+            value={formData.profissaoPai}
+            onChangeText={(v) => handleChange('profissaoPai', v)}
+            editable={hasResponsavelPaterno}
+          />
         </View>
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity
-            style={[styles.button, isSubmitting && styles.buttonDisabled]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.buttonText}>
-              {isSubmitting ? 'Validando...' : 'Próximo'}
-            </Text>
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, isSubmitting && styles.buttonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          <Text style={styles.buttonText}>
+            {isSubmitting ? 'Validando...' : 'Próximo'}
+          </Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => router.push('/forms-materno')}
-            style={styles.backButton}
-          >
-            <Text style={styles.backLink}>Voltar</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => router.push('/forms-materno')}
+          style={styles.backButton}
+        >
+          <Text style={styles.backLink}>Voltar</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -354,39 +361,24 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     elevation: 2,
+    gap: 12,
   },
   formDisabled: {
     opacity: 0.6,
-  },
-  buttonsContainer: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 16,
-    elevation: 2,
   },
   sectionTitle: {
     color: '#902121',
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
+    marginBottom: 8,
   },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+  label: {
+    fontSize: 14,
+    color: '#444',
+    marginBottom: 4,
+    fontWeight: '500',
   },
   input: {
-    flex: 1,
-    height: 48,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    fontSize: 16,
-    backgroundColor: '#ffffff',
-  },
-  inputFull: {
     width: '100%',
     height: 48,
     borderWidth: 1,
@@ -395,7 +387,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 16,
     backgroundColor: '#ffffff',
-    marginBottom: 16,
   },
   disabledInput: {
     backgroundColor: '#f0f0f0',
@@ -405,7 +396,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 16,
     alignItems: 'center',
-    opacity: 1,
+    marginTop: 24,
   },
   buttonDisabled: {
     opacity: 0.7,
@@ -429,7 +420,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#dc2626',
     fontSize: 12,
-    marginTop: 4,
-    marginLeft: 4,
+    marginBottom: 8,
   },
 });
