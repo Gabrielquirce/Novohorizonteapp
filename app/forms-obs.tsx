@@ -1,4 +1,5 @@
 
+import { FontAwesome } from '@expo/vector-icons';
 import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
@@ -64,6 +65,24 @@ const FormularioCompleto = () => {
       ]
     );
   };
+
+  // Crie uma nova função:
+    const handleDownloadTerms = () => {
+      Alert.alert(
+        'Baixar Termos',
+        'Deseja baixar o arquivo com os termos escolares?',
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+          },
+          {
+            text: 'Baixar',
+            onPress: () => Linking.openURL('https://termos.tiiny.site') // Seu link aqui
+          },
+        ]
+      );
+    };
 
   const validateStep1 = () => {
     const errors = [];
@@ -405,13 +424,25 @@ const FormularioCompleto = () => {
               ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
               ☑ Clique apenas se a escola solicitar envio digital
             </Text>
+            
+            {/* Botão Novo */}
+           
+
             <TouchableOpacity
               style={styles.emailButton}
               onPress={handleEmail}>
-              <Text style={styles.emailButtonText}>📎 Enviar Documentos</Text>
+              <Text style={styles.emailButtonText}>Enviar Documentos</Text>
             </TouchableOpacity>
           </View>
 
+          <TouchableOpacity
+              style={styles.downloadButton}
+              onPress={handleDownloadTerms}
+            >
+              <FontAwesome name="file-pdf-o" size={18} color="white" />
+              <Text style={styles.downloadButtonText}>Baixar Termos Escolares</Text>
+            </TouchableOpacity>
+            
           <TouchableOpacity
             style={[styles.button, styles.secondaryButton]}
             onPress={() => setStep(1)}>
@@ -516,6 +547,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emailButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  downloadButton: {
+    backgroundColor: '#8B0000',
+    borderRadius: 6,
+    padding: 12,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 10,
+  },
+  downloadButtonText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
