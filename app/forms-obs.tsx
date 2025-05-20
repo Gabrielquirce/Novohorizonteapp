@@ -1,4 +1,3 @@
-
 import { FontAwesome } from '@expo/vector-icons';
 import { isAxiosError } from 'axios';
 import { router } from 'expo-router';
@@ -66,23 +65,22 @@ const FormularioCompleto = () => {
     );
   };
 
-  // Crie uma nova função:
-    const handleDownloadTerms = () => {
-      Alert.alert(
-        'Baixar Termos',
-        'Deseja baixar o arquivo com os termos escolares?',
-        [
-          {
-            text: 'Cancelar',
-            style: 'cancel',
-          },
-          {
-            text: 'Baixar',
-            onPress: () => Linking.openURL('https://termos.tiiny.site') // Seu link aqui
-          },
-        ]
-      );
-    };
+  const handleDownloadTerms = () => {
+    Alert.alert(
+      'Baixar Termos',
+      'Deseja baixar o arquivo com os termos escolares?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Baixar',
+          onPress: () => Linking.openURL('https://termos.tiiny.site')
+        },
+      ]
+    );
+  };
 
   const validateStep1 = () => {
     const errors = [];
@@ -121,7 +119,7 @@ const FormularioCompleto = () => {
     setStep(2);
   };
 
-  const handleSubmit = async () => {
+  const submitData = async () => {
     setLoading(true);
     try {
       if (step === 2 && !validateStep2()) return;
@@ -212,6 +210,25 @@ const FormularioCompleto = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = () => {
+    Alert.alert(
+      '🔒 Política de Coleta de Dados',
+      `Por questões de segurança, conformidade legal e bem-estar dos alunos, a escola necessita dos seguintes dados:
+
+• Identificação completa do aluno para registros acadêmicos
+• Dados dos pais/responsáveis para comunicação e autorizações
+• Informações médicas para atendimento emergencial
+• Histórico escolar para adequação pedagógica
+• Contatos atualizados para situações de emergência
+
+Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins educacionais.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Confirmar', onPress: () => submitData() }
+      ]
+    );
   };
 
   return (
@@ -424,9 +441,6 @@ const FormularioCompleto = () => {
               ✗ Se for entregar pessoalmente ou já entregou, não clique!{"\n"}
               ☑ Clique apenas se a escola solicitar envio digital
             </Text>
-            
-            {/* Botão Novo */}
-           
 
             <TouchableOpacity
               style={styles.emailButton}
