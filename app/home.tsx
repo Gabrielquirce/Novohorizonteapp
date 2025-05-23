@@ -55,10 +55,10 @@ export default function HomeScreen() {
         {/* Seção Gerenciamento de Matrículas */}
         <TouchableOpacity
           style={styles.card}
-          onPress={() => router.push('/students')}
+          onPress={() => router.push('/solicitacoes')}
         >
-          <Text style={styles.cardTitle}>Matrículas</Text>
-          <Text style={styles.cardSubtitle}>Acesse os dados dos alunos pré matriculados</Text>
+          <Text style={styles.cardTitle}>Solicitações</Text>
+          <Text style={styles.cardSubtitle}>Solicite alterações de dados cadastrados</Text>
         </TouchableOpacity>
 
         {/* Seção Contatos */}

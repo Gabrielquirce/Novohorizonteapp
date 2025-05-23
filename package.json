@@ -20,6 +20,7 @@
     "cenovohorizonte": "file:",
     "expo": "^53.0.7",
     "expo-application": "~6.1.4",
+    "expo-asset": "~11.1.5",
     "expo-blur": "~14.1.4",
     "expo-constants": "~17.1.4",
     "expo-file-system": "~18.1.10",

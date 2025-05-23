@@ -6,8 +6,7 @@ export default function RootLayout() {
     initialRouteName="home">
       <Stack.Screen name="home"/>
       <Stack.Screen name="forms-aluno" />
-      <Stack.Screen name="students" />
-      <Stack.Screen name="loginAdm" />
+      <Stack.Screen name="solicitacoes" />
       <Stack.Screen name="forms-materno" />
       <Stack.Screen name="forms-paterno" />
       <Stack.Screen name="forms-obs" />

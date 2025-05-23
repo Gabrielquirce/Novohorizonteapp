@@ -17,7 +17,8 @@
       "package": "com.anonymous.CENovoHorizonte",
       "permissions": [
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ]
     },
     "web": {
@@ -41,7 +42,8 @@
         {
           "photosPermission": "O app precisa acessar seus arquivos para salvar o PDF dos termos de matrícula"
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
@@ -50,6 +52,9 @@
       "router": {
         "origin": false
       }
-    }
+    },
+    "assetBundlePatterns": [
+      "**/*.pdf"
+    ]
   }
 }
