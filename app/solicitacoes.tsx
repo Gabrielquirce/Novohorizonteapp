@@ -29,14 +29,14 @@ const SolicitacoesScreen = () => {
     try {
       // Envio por email diretamente
       await Linking.openURL(
-        `mailto:escola@example.com?` +
+        `mailto:vanessalimapsicopedagoga@bol.com.br?` +
         `subject=Solicitação de Alteração de Dados&` +
         `body=${encodeURIComponent(solicitacao + '\n\nEnviado via App Escola')}`
       );
       
       Alert.alert('✅ Sucesso', 'Solicitação enviada com sucesso!');
       router.back();
-    } catch (error) {
+    } catch {
       Alert.alert('Erro', 'Não foi possível enviar a solicitação');
     } finally {
       setLoading(false);

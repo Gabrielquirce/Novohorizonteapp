@@ -71,7 +71,7 @@ const FormularioCompleto = () => {
   const handleDownloadTerms = async () => {
     try {
       // 1. Carregar o asset corretamente
-      const asset = Asset.fromModule(require("./assets/pdfs/termos.pdf"));
+      const asset = Asset.fromModule(require("./assets/images/termos.pdf"));
       await asset.downloadAsync();
 
       // 2. Criar cópia no diretório de cache
