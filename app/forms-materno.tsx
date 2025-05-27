@@ -240,6 +240,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Joana Silva"
+            placeholderTextColor="#000"
             value={formData.nomeMae}
             onChangeText={(v) => handleChange('nomeMae', v)}
             editable={hasResponsavelMaterno}
@@ -250,6 +251,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="00000-000"
+            placeholderTextColor="#000"
             value={formData.cepMae}
             onChangeText={(v) => handleChange('cepMae', v)}
             mask={cepMask}
@@ -262,6 +264,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="(00) 00000-0000"
+            placeholderTextColor="#000"
             value={formData.telefoneMae}
             onChangeText={(v) => handleChange('telefoneMae', v)}
             mask={telefoneMask}
@@ -274,6 +277,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Empresa XYZ"
+            placeholderTextColor="#000"
             value={formData.trabalhoMae}
             onChangeText={(v) => handleChange('trabalhoMae', v)}
             editable={hasResponsavelMaterno}
@@ -283,6 +287,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="00/00/0000"
+            placeholderTextColor="#000"
             value={formData.nascimentoMae}
             onChangeText={(v) => handleChange('nascimentoMae', v)}
             mask={dataMask}
@@ -295,6 +300,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="000.000.000-00"
+            placeholderTextColor="#000"
             value={formData.cpfMae}
             onChangeText={(v) => handleChange('cpfMae', v)}
             mask={cpfMask}
@@ -307,6 +313,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="joana@email.com"
+            placeholderTextColor="#000"
             value={formData.emailMae}
             onChangeText={(v) => handleChange('emailMae', v)}
             keyboardType="email-address"
@@ -319,6 +326,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="(00) 00000-0000"
+            placeholderTextColor="#000"
             value={formData.telefoneTrabalhoMae}
             onChangeText={(v) => handleChange('telefoneTrabalhoMae', v)}
             mask={telefoneMask}
@@ -331,6 +339,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Rua Exemplo, 123"
+            placeholderTextColor="#000"
             value={formData.enderecoMae}
             onChangeText={(v) => handleChange('enderecoMae', v)}
             editable={hasResponsavelMaterno}
@@ -340,6 +349,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput  
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="123"
+            placeholderTextColor="#000"
             value={formData.numeroCasaMae}
             onChangeText={(v) => handleChange('numeroCasaMae', v)}
             keyboardType="number-pad"
@@ -351,6 +361,7 @@ export default function FamiliaresMaternoScreen() {
           <MaskInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="00.000.000-0"
+            placeholderTextColor="#000"
             value={formData.rgMae}
             onChangeText={(v) => handleChange('rgMae', v)}
             mask={rgMask}
@@ -363,6 +374,7 @@ export default function FamiliaresMaternoScreen() {
           <TextInput
             style={[styles.input, !hasResponsavelMaterno && styles.disabledInput]}
             placeholder="Engenheira"
+            placeholderTextColor="#000"
             value={formData.profissaoMae}
             onChangeText={(v) => handleChange('profissaoMae', v)}
             editable={hasResponsavelMaterno}
@@ -474,6 +486,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#ffffff',
     marginBottom: 8,
+    color: '#000',
   },
   disabledInput: {
     backgroundColor: '#f0f0f0',

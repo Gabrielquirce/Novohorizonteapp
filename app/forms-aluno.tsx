@@ -1,7 +1,7 @@
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import { debounce } from 'lodash';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import useFormStore from './Store/useFormStore';
+import globalStyles from './styles/globalStyles';
 
 type FormField = keyof typeof initialFormState;
 
@@ -234,6 +235,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="João da Silva"
+             placeholderTextColor="#000"
             value={formData.nome}
             onChangeText={(v) => handleChange('nome', v)}
             importantForAutofill="yes"
@@ -244,6 +246,7 @@ export default function RegisterScreen() {
           <MaskInput
             style={styles.input}
             placeholder="00/00/0000"
+             placeholderTextColor="#000"
             value={formData.dataNascimento}
             onChangeText={(v) => handleChange('dataNascimento', v)}
             mask={dataMask}
@@ -255,6 +258,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Teresopolitano"
+             placeholderTextColor="#000"
             value={formData.naturalidade}
             onChangeText={(v) => handleChange('naturalidade', v)}
           />
@@ -263,6 +267,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Brasileira"
+             placeholderTextColor="#000"
             value={formData.nacionalidade}
             onChangeText={(v) => handleChange('nacionalidade', v)}
           />
@@ -284,6 +289,7 @@ export default function RegisterScreen() {
           <MaskInput
             style={styles.input}
             placeholder="000.000.000-00"
+             placeholderTextColor="#000"
             value={formData.cpf}
             onChangeText={(v) => handleChange('cpf', v)}
             mask={cpfMask}
@@ -295,6 +301,7 @@ export default function RegisterScreen() {
           <MaskInput
             style={styles.input}
             placeholder="00.000.000-0"
+             placeholderTextColor="#000"
             value={formData.rg}
             onChangeText={(v) => handleChange('rg', v)}
             mask={rgMask}
@@ -306,6 +313,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Número do termo"
+             placeholderTextColor="#000"
             value={formData.termo}
             onChangeText={(v) => handleChange('termo', v)}
             keyboardType="number-pad"
@@ -315,6 +323,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Número da folha"
+             placeholderTextColor="#000"
             value={formData.folha}
             onChangeText={(v) => handleChange('folha', v)}
             keyboardType="number-pad"
@@ -324,6 +333,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Número do livro"
+             placeholderTextColor="#000"
             value={formData.livro}
             onChangeText={(v) => handleChange('livro', v)}
             keyboardType="number-pad"
@@ -333,6 +343,7 @@ export default function RegisterScreen() {
           <TextInput
             style={styles.input}
             placeholder="Número da matrícula"
+             placeholderTextColor="#000"
             value={formData.matricula}
             onChangeText={(v) => handleChange('matricula', v)}
             keyboardType="number-pad"
@@ -379,8 +390,9 @@ export default function RegisterScreen() {
 
           <Text style={styles.label}>Ano Letivo</Text>
           <TextInput
-            style={styles.input}
+            style={globalStyles.input}
             placeholder="Ano letivo atual"
+            placeholderTextColor="#000" // Placeholder text in black
             value={formData.anoLetivo}
             onChangeText={(v) => handleChange('anoLetivo', v)}
             keyboardType="number-pad"
@@ -452,6 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#ffffff',
     marginBottom: 8,
+    color: '#000', // Ensures the input text is black
   },
   pickerContainer: {
     width: '100%',

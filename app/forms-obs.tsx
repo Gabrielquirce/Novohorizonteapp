@@ -20,6 +20,7 @@ import MaskInput from 'react-native-mask-input';
 import api from './api/axiosInstance';
 import StandardPicker from './components/StandardPicker';
 import useFormStore from './Store/useFormStore';
+import globalStyles from './styles/globalStyles';
 
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
 const rgMask = [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/];
