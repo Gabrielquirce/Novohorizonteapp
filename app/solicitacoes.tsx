@@ -1,25 +1,35 @@
 // apps/alteracoes.tsx
-import Icon from '@expo/vector-icons/FontAwesome';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import Icon from "@expo/vector-icons/FontAwesome";
+import { router } from "expo-router";
+import { useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Linking,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const SolicitacoesScreen = () => {
-  const [solicitacao, setSolicitacao] = useState('');
+  const [solicitacao, setSolicitacao] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = () => {
     if (!solicitacao.trim()) {
-      Alert.alert('Campo obrigatório', 'Descreva a alteração solicitada');
+      Alert.alert("Campo obrigatório", "Descreva a alteração solicitada");
       return;
     }
 
     Alert.alert(
-      'Confirmar Envio',
-      'Deseja enviar esta solicitação de alteração?',
+      "Confirmar Envio",
+      "Deseja enviar esta solicitação de alteração?",
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Enviar', onPress: () => sendRequest() }
+        { text: "Cancelar", style: "cancel" },
+        { text: "Enviar", onPress: () => sendRequest() },
       ]
     );
   };
@@ -30,21 +40,29 @@ const SolicitacoesScreen = () => {
       // Envio por email diretamente
       await Linking.openURL(
         `mailto:vanessalimapsicopedagoga@bol.com.br?` +
-        `subject=Solicitação de Alteração de Dados&` +
-        `body=${encodeURIComponent(solicitacao + '\n\nEnviado via App Escola')}`
+          `subject=Solicitação de Alteração de Dados&` +
+          `body=${encodeURIComponent(
+            solicitacao + "\n\nEnviado via App Escola"
+          )}`
       );
-      
-      Alert.alert('✅ Sucesso', 'Solicitação enviada com sucesso!');
+
+      Alert.alert("✅ Sucesso", "Solicitação enviada com sucesso!");
       router.back();
     } catch {
-      Alert.alert('Erro', 'Não foi possível enviar a solicitação');
+      Alert.alert("Erro", "Não foi possível enviar a solicitação");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <KeyboardAwareScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      showsVerticalScrollIndicator={false}
+      enableOnAndroid={true}
+    >
       <Text style={styles.title}>Solicitar Alterações</Text>
 
       <View style={styles.card}>
@@ -64,6 +82,7 @@ const SolicitacoesScreen = () => {
         multiline
         numberOfLines={5}
         placeholder="Ex: Atualizar número de telefone para (21) 98765-4321"
+        placeholderTextColor="#000" // Adicionado
         value={solicitacao}
         onChangeText={setSolicitacao}
       />
@@ -82,12 +101,12 @@ const SolicitacoesScreen = () => {
 
       <View style={styles.lgpdSection}>
         <Text style={styles.sectionTitle}>Proteção de Dados (LGPD)</Text>
-        
+
         <Text style={styles.lgpdText}>
-          <Icon name="shield" size={16} color="#27ae60" /> {' '}
-          Todas as informações coletadas são utilizadas exclusivamente para:
+          <Icon name="shield" size={16} color="#27ae60" /> Todas as informações
+          coletadas são utilizadas exclusivamente para:
         </Text>
-        
+
         <View style={styles.bulletList}>
           <Text>• Gestão acadêmica do aluno</Text>
           <Text>• Comunicação institucional</Text>
@@ -104,7 +123,11 @@ const SolicitacoesScreen = () => {
         </Text>
 
         <TouchableOpacity
-          onPress={() => Linking.openURL('https://www.gov.br/cidadania/pt-br/acesso-a-informacao/lgpd')}
+          onPress={() =>
+            Linking.openURL(
+              "https://www.gov.br/cidadania/pt-br/acesso-a-informacao/lgpd"
+            )
+          }
           style={styles.link}
         >
           <Text style={styles.linkText}>
@@ -113,87 +136,88 @@ const SolicitacoesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.back()}
-      >
+      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
         <Text style={styles.backText}>Voltar</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    padding: 20,
-    backgroundColor: '#f8f9fa',
+    paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingBottom: 45,
+    backgroundColor: "#f8f9fa",
+    borderTopWidth: 35,
+    borderTopColor: "#902121",
   },
   title: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#902121',
+    fontWeight: "600",
+    color: "#902121",
     marginBottom: 25,
-    textAlign: 'center',
+    textAlign: "center",
   },
   card: {
-    backgroundColor: '#e8f4fc',
+    backgroundColor: "#e8f4fc",
     padding: 15,
     borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 10,
     marginBottom: 20,
   },
   cardText: {
     flex: 1,
-    color: '#2c3e50',
+    color: "#2c3e50",
     lineHeight: 22,
   },
   label: {
     fontSize: 16,
     marginBottom: 10,
-    color: '#34495e',
-    fontWeight: '500',
+    color: "#34495e",
+    fontWeight: "500",
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderWidth: 1,
-    borderColor: '#dcdde1',
+    borderColor: "#dcdde1",
     borderRadius: 8,
     padding: 15,
     fontSize: 16,
     minHeight: 120,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     marginBottom: 25,
   },
   button: {
-    backgroundColor: '#902121',
+    backgroundColor: "#902121",
     padding: 15,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
   },
   buttonText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   lgpdSection: {
     borderTopWidth: 1,
-    borderTopColor: '#dcdde1',
+    borderTopColor: "#dcdde1",
     paddingTop: 25,
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: '600',
-    color: '#2c3e50',
+    fontWeight: "600",
+    color: "#2c3e50",
     marginBottom: 15,
   },
   lgpdText: {
     fontSize: 14,
     lineHeight: 22,
-    color: '#444',
+    color: "#444",
     marginBottom: 15,
   },
   bulletList: {
@@ -204,20 +228,20 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 10,
     borderRadius: 8,
-    backgroundColor: '#f1f2f6',
+    backgroundColor: "#f1f2f6",
   },
   linkText: {
-    color: '#2980b9',
-    textDecorationLine: 'underline',
-    textAlign: 'center',
+    color: "#2980b9",
+    textDecorationLine: "underline",
+    textAlign: "center",
   },
   backButton: {
     marginTop: 20,
-    alignSelf: 'center',
+    alignSelf: "center",
   },
   backText: {
-    color: '#902121',
-    textAlign: 'center',
+    color: "#902121",
+    textAlign: "center",
     marginTop: 16,
     fontSize: 18,
     opacity: 1,

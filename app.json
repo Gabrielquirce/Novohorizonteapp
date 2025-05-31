@@ -13,6 +13,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "softwareKeyboardLayoutMode": "resize",
       "edgeToEdgeEnabled": true,
       "package": "com.anonymous.CENovoHorizonte",
       "permissions": [

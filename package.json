@@ -45,6 +45,7 @@
     "react-native": "0.79.2",
     "react-native-file-viewer": "^2.1.5",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-maps": "^1.20.1",
     "react-native-mask-input": "^1.2.3",
     "react-native-paper": "^5.14.0",

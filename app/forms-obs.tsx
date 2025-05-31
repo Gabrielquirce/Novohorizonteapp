@@ -20,7 +20,6 @@ import MaskInput from 'react-native-mask-input';
 import api from './api/axiosInstance';
 import StandardPicker from './components/StandardPicker';
 import useFormStore from './Store/useFormStore';
-import globalStyles from './styles/globalStyles';
 
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
 const rgMask = [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/];
@@ -276,6 +275,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Digite o nome da escola"
+                placeholderTextColor="#000" // Adicionado
                 value={escola}
                 onChangeText={setEscola}
               />
@@ -300,6 +300,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Separe por vírgulas"
+                placeholderTextColor="#000" // Adicionado
                 value={irmaosNome}
                 onChangeText={setIrmaosNome}
               />
@@ -324,6 +325,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Descreva o acompanhamento"
+                placeholderTextColor="#000" // Adicionado
                 value={especialista}
                 onChangeText={setEspecialista}
               />
@@ -348,6 +350,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Descreva as alergias"
+                placeholderTextColor="#000" // Adicionado
                 value={alergia}
                 onChangeText={setAlergia}
               />
@@ -372,6 +375,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Liste os medicamentos"
+                placeholderTextColor="#000" // Adicionado
                 value={medicamento}
                 onChangeText={setMedicamento}
               />
@@ -400,6 +404,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
             <TextInput
               style={styles.input}
               placeholder="Ex: Pai, Mãe, Avós"
+              placeholderTextColor="#000" // Adicionado
               value={formData.reside}
               onChangeText={(v) => handleChange('reside', v)}
             />
@@ -410,6 +415,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
             <TextInput
               style={styles.input}
               placeholder="Nome Completo"
+              placeholderTextColor="#000" // Adicionado
               value={formData.respNome}
               onChangeText={(v) => handleChange('respNome', v)}
             />
@@ -417,6 +423,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
             <MaskInput
               style={styles.input}
               placeholder="000.000.000-00"
+              placeholderTextColor="#000" // Adicionado
               value={formData.respCpf}
               onChangeText={(v) => handleChange('respCpf', v)}
               mask={cpfMask}
@@ -426,6 +433,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
             <MaskInput
               style={styles.input}
               placeholder="(00) 00000-0000"
+              placeholderTextColor="#000" // Adicionado
               value={formData.respTelefone}
               onChangeText={(v) => handleChange('respTelefone', v)}
               mask={telefoneMask}
@@ -438,6 +446,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
             <MaskInput
               style={[styles.input, styles.multilineInput]}
               placeholder="Nome completo separado por vírgulas"
+              placeholderTextColor="#000" // Adicionado
               value={formData.pessoasAutorizadas}
               onChangeText={(v) => handleChange('pessoasAutorizadas', v)}
             />

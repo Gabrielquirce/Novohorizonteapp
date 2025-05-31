@@ -148,8 +148,8 @@ export default function AboutUsScreen() {
       </View>
 
       {/* Atividades com FlatList */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Atividades Extras</Text>
+      <View style={styles.activitiesSection}>
+        <Text style={[styles.sectionTitle,{color:"black"}]}>Atividades Extras</Text>
         <FlatList
           data={activities}
           renderItem={({ item }) => (
@@ -180,7 +180,7 @@ export default function AboutUsScreen() {
           </TouchableOpacity>
         </View>
 
-        <Link href="/home" style={styles.link}>
+        <Link href="/" style={styles.link}>
           <Text style={styles.linkText}>Voltar para tela inicial</Text>
         </Link>
       </View>
@@ -193,12 +193,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#902121",
+    paddingTop:30,
   },
   header: {
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.3)'
+    borderBottomColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   logo: {
     width: 100,
@@ -215,15 +217,25 @@ const styles = StyleSheet.create({
   section: {
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.2)'
+    borderBottomColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: '#f5f5f5',
+  },
+  activitiesSection: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+    borderBottomColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgb(212, 212, 212)',
   },
   sectionTitle: {
-    color: 'white',
+    color: '#444',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 15,
     textAlign: 'center',
   },
+
   missionContainer: {
     flexDirection: width > 768 ? 'row' : 'column',
     alignItems: 'center',
@@ -236,10 +248,11 @@ const styles = StyleSheet.create({
     resizeMode: 'cover',
   },
   text: {
-    color: 'rgba(255,255,255,0.95)',
-    fontSize: 16,
+    color: '#444',
+    fontSize: 18,
     lineHeight: 24,
     flex: 1,
+    textAlign: 'justify',
   },
   directorSection: {
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -272,7 +285,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   segmentCard: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#902121',
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
@@ -292,19 +305,21 @@ const styles = StyleSheet.create({
   },
   segmentText: {
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
+    fontSize: 16,
     lineHeight: 20,
+    textAlign: 'justify',
   },
   activityCard: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#902121',
     borderRadius: 10,
     marginBottom: 15,
     overflow: 'hidden',
+    minHeight: 150,
   },
   activityImage: {
     width: 100,
-    height: 100,
+    height: "100%",
     resizeMode: 'cover',
   },
   activityTextContainer: {
@@ -322,11 +337,13 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     lineHeight: 20,
+    textAlign: 'justify',
   },
   footer: {
-    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 80,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   contactContainer: {
     flexDirection: 'row',

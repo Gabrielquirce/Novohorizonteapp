@@ -1,19 +1,9 @@
 import { router } from 'expo-router';
 import React from 'react';
-import {
-    Alert,
-    BackHandler,
-    GestureResponderEvent,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from 'react-native';
+import { Alert, BackHandler, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
-  function confirmExit(event: GestureResponderEvent): void {
+  function confirmExit(): void {
     Alert.alert(
       'Sair',
       'Deseja realmente sair do aplicativo?',
@@ -97,6 +87,9 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#902121',
     padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 40,
     alignItems: 'center',
     flexDirection: 'row',
   },

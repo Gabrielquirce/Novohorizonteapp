@@ -201,7 +201,11 @@ export default function RegisterScreen() {
         mode="dropdown"
         prompt={placeholder}
       >
-        <Picker.Item label={placeholder} value="" />
+        <Picker.Item 
+          label={placeholder} 
+          value="" 
+          style={{ color: '#000' }} // Placeholder text in black
+        />
         {items.map((item) => (
           <Picker.Item
             key={item.value}

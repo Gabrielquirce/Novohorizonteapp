@@ -5,7 +5,8 @@ export default function RootLayout() {
     <Stack screenOptions={{ headerShown: false }}
     initialRouteName="index">
       <Stack.Screen name="index"/>
-      <Stack.Screen name="home" />
+
+      <Stack.Screen name="index" />
       <Stack.Screen name="forms-aluno" />
       <Stack.Screen name="solicitacoes" />
       <Stack.Screen name="forms-materno" />

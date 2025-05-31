@@ -109,7 +109,7 @@ export default function AboutDevs() {
       </View>
 
       {/* Botão de Voltar */}
-      <Link href="/home" style={styles.link}>
+      <Link href="/" style={styles.link}>
         Voltar para tela Inicial
       </Link>
     </ScrollView>
@@ -120,6 +120,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "rgba(82,10,10,1)",
+    paddingTop: 25,
   },
   header: {
     padding: 20,
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.76)',
     fontSize: 18,
     textAlign: 'center',
-    marginVertical: 20,
+    marginBottom: 83,
     
   },
 });
