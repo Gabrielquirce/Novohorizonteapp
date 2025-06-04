@@ -8,8 +8,7 @@
       },
       "production": {
         "android": {
-          "buildType": "apk",
-          "outputName": "CENovoHorizonte-${version}.apk"
+          "buildType": "apk"
         }
       }
     }

@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import api from './api/axiosInstance';
-import StandardPicker from './components/StandardPicker';
+import CustomPicker from './components/CustomPicker';
 import useFormStore from './Store/useFormStore';
 
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
@@ -107,9 +107,13 @@ const FormularioCompleto = () => {
     if ((matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && !escola.trim()) {
       errors.push('Informe o nome da escola anterior');
     }
+    if (!temIrmaos) errors.push('Selecione se possui irmãos');
     if (temIrmaos === 'sim' && !irmaosNome.trim()) errors.push('Informe os nomes dos irmãos');
+    if (!temEspecialista) errors.push('Selecione se possui acompanhamento especializado');
     if (temEspecialista === 'sim' && !especialista.trim()) errors.push('Informe o tipo de acompanhamento');
+    if (!temAlergias) errors.push('Selecione se possui alergias');
     if (temAlergias === 'sim' && !alergia.trim()) errors.push('Descreva as alergias');
+    if (!temMedicamento) errors.push('Selecione se usa medicamentos');
     if (temMedicamento === 'sim' && !medicamento.trim()) errors.push('Informe os medicamentos');
 
     if (errors.length > 0) {
@@ -218,7 +222,7 @@ const FormularioCompleto = () => {
 
       Alert.alert('✅ Sucesso', 'Cadastro completo realizado!');
       clearStore();
-      router.push('/home');
+      router.push('/');
 
     } catch (error) {
       let errorMessage = 'Erro no cadastro:';
@@ -256,18 +260,20 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
         <View style={styles.stepContainer}>
           <Text style={styles.sectionTitle}>Observações</Text>
 
-          <StandardPicker
-            label="Tipo de Matrícula"
-            items={[
-              { label: 'Inicial', value: 'inicial' },
-              { label: 'Transferência Municipal/Estadual', value: 'transferencia_municipal_estadual' },
-              { label: 'Transferência Particular', value: 'transferencia_particular' }
-            ]}
-            placeholder="Selecione"
-            value={matriculaTipo}
-            onValueChange={setMatriculaTipo}
-            error={!matriculaTipo ? 'Selecione o tipo de matrícula' : undefined}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Tipo de Matrícula</Text>
+            <CustomPicker
+              items={[
+                { label: 'Inicial', value: 'inicial' },
+                { label: 'Transferência Municipal/Estadual', value: 'transferencia_municipal_estadual' },
+                { label: 'Transferência Particular', value: 'transferencia_particular' }
+              ]}
+              selectedValue={matriculaTipo}
+              onValueChange={setMatriculaTipo}
+              placeholder="Selecione o tipo de matrícula"
+            />
+            {!matriculaTipo && <Text style={styles.errorText}>Selecione o tipo de matrícula</Text>}
+          </View>
 
           {(matriculaTipo === 'transferencia_municipal_estadual' || matriculaTipo === 'transferencia_particular') && (
             <View style={styles.inputGroup}>
@@ -275,24 +281,26 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Digite o nome da escola"
-                placeholderTextColor="#000" // Adicionado
+                placeholderTextColor="#666"
                 value={escola}
                 onChangeText={setEscola}
               />
             </View>
           )}
 
-          <StandardPicker
-            label="Possui Irmãos?"
-            items={[
-              { label: 'Sim', value: 'sim' },
-              { label: 'Não', value: 'não' }
-            ]}
-            placeholder="Selecione"
-            value={temIrmaos}
-            onValueChange={setTemIrmaos}
-            error={!temIrmaos ? 'Selecione uma opção' : undefined}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Possui Irmãos?</Text>
+            <CustomPicker
+              items={[
+                { label: 'Sim', value: 'sim' },
+                { label: 'Não', value: 'não' }
+              ]}
+              selectedValue={temIrmaos}
+              onValueChange={setTemIrmaos}
+              placeholder="Selecione uma opção"
+            />
+            {!temIrmaos && <Text style={styles.errorText}>Selecione uma opção</Text>}
+          </View>
 
           {temIrmaos === 'sim' && (
             <View style={styles.inputGroup}>
@@ -300,24 +308,26 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Separe por vírgulas"
-                placeholderTextColor="#000" // Adicionado
+                placeholderTextColor="#666"
                 value={irmaosNome}
                 onChangeText={setIrmaosNome}
               />
             </View>
           )}
 
-          <StandardPicker
-            label="Acompanhamento Especializado"
-            items={[
-              { label: 'Sim', value: 'sim' },
-              { label: 'Não', value: 'não' }
-            ]}
-            placeholder="Selecione"
-            value={temEspecialista}
-            onValueChange={setTemEspecialista}
-            error={!temEspecialista ? 'Selecione uma opção' : undefined}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Acompanhamento Especializado</Text>
+            <CustomPicker
+              items={[
+                { label: 'Sim', value: 'sim' },
+                { label: 'Não', value: 'não' }
+              ]}
+              selectedValue={temEspecialista}
+              onValueChange={setTemEspecialista}
+              placeholder="Selecione uma opção"
+            />
+            {!temEspecialista && <Text style={styles.errorText}>Selecione uma opção</Text>}
+          </View>
 
           {temEspecialista === 'sim' && (
             <View style={styles.inputGroup}>
@@ -325,24 +335,26 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Descreva o acompanhamento"
-                placeholderTextColor="#000" // Adicionado
+                placeholderTextColor="#666"
                 value={especialista}
                 onChangeText={setEspecialista}
               />
             </View>
           )}
 
-          <StandardPicker
-            label="Possui Alergias?"
-            items={[
-              { label: 'Sim', value: 'sim' },
-              { label: 'Não', value: 'não' }
-            ]}
-            placeholder="Selecione"
-            value={temAlergias}
-            onValueChange={setTemAlergias}
-            error={!temAlergias ? 'Selecione uma opção' : undefined}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Possui Alergias?</Text>
+            <CustomPicker
+              items={[
+                { label: 'Sim', value: 'sim' },
+                { label: 'Não', value: 'não' }
+              ]}
+              selectedValue={temAlergias}
+              onValueChange={setTemAlergias}
+              placeholder="Selecione uma opção"
+            />
+            {!temAlergias && <Text style={styles.errorText}>Selecione uma opção</Text>}
+          </View>
 
           {temAlergias === 'sim' && (
             <View style={styles.inputGroup}>
@@ -350,24 +362,26 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Descreva as alergias"
-                placeholderTextColor="#000" // Adicionado
+                placeholderTextColor="#666"
                 value={alergia}
                 onChangeText={setAlergia}
               />
             </View>
           )}
 
-          <StandardPicker
-            label="Uso de Medicamentos"
-            items={[
-              { label: 'Sim', value: 'sim' },
-              { label: 'Não', value: 'não' }
-            ]}
-            placeholder="Selecione"
-            value={temMedicamento}
-            onValueChange={setTemMedicamento}
-            error={!temMedicamento ? 'Selecione uma opção' : undefined}
-          />
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Uso de Medicamentos</Text>
+            <CustomPicker
+              items={[
+                { label: 'Sim', value: 'sim' },
+                { label: 'Não', value: 'não' }
+              ]}
+              selectedValue={temMedicamento}
+              onValueChange={setTemMedicamento}
+              placeholder="Selecione uma opção"
+            />
+            {!temMedicamento && <Text style={styles.errorText}>Selecione uma opção</Text>}
+          </View>
 
           {temMedicamento === 'sim' && (
             <View style={styles.inputGroup}>
@@ -375,7 +389,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
               <TextInput
                 style={styles.input}
                 placeholder="Liste os medicamentos"
-                placeholderTextColor="#000" // Adicionado
+                placeholderTextColor="#666"
                 value={medicamento}
                 onChangeText={setMedicamento}
               />
@@ -396,7 +410,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.stepContainer}>
+         <View style={styles.stepContainer}>
           <Text style={styles.sectionTitle}>Composição Familiar</Text>
           
           <View style={styles.inputGroup}>
@@ -493,7 +507,7 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push('/home')}
+            onPress={() => router.push('/')}
             style={styles.backButton}>
             <Text style={styles.backLink}>Voltar à Página Principal</Text>
           </TouchableOpacity>
@@ -520,11 +534,13 @@ const styles = StyleSheet.create({
   },
   inputGroup: {
     gap: 8,
+    marginBottom: 12,
   },
   label: {
     color: '#444',
     fontSize: 14,
     fontWeight: '500',
+    marginBottom: 4,
   },
   input: {
     width: '100%',
@@ -535,6 +551,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: '#ffffff',
     fontSize: 16,
+    color: '#000',
   },
   multilineInput: {
     height: 80,
@@ -608,6 +625,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  errorText: {
+    color: '#dc2626',
+    fontSize: 12,
+    marginTop: 4,
   },
 });
 

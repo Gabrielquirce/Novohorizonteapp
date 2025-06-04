@@ -136,7 +136,7 @@ const SolicitacoesScreen = () => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backButton} onPress={() => router.push('/')}>
         <Text style={styles.backText}>Voltar</Text>
       </TouchableOpacity>
     </KeyboardAwareScrollView>

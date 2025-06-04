@@ -1,7 +1,7 @@
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import { debounce } from 'lodash';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import useFormStore from './Store/useFormStore';
-import globalStyles from './styles/globalStyles';
+import CustomPicker from './components/CustomPicker'
 
 type FormField = keyof typeof initialFormState;
 
@@ -40,11 +40,37 @@ const initialFormState = {
 const cpfMask = [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/];
 const dataMask = [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/];
 const rgMask = [/\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/];
+const requiredFields: FormField[] = [
+  'nome', 'dataNascimento', 'cpf', 'rg',
+  'sexo', 'turno', 'tipoSanguineo', 'raca', 'anoLetivo'
+];
+
+const isValidDate = (dateString: string): boolean => {
+  const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/;
+  if (!regex.test(dateString)) return false;
+  
+  const [day, month, year] = dateString.split('/').map(Number);
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getDate() === day &&
+    date.getMonth() === month - 1 &&
+    date.getFullYear() === year
+  );
+};
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<FormField, string>>({} as Record<FormField, string>);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Refs para gerenciamento de foco
+  const naturalidadeRef = useRef<TextInput>(null);
+  const nacionalidadeRef = useRef<TextInput>(null);
+  const termoRef = useRef<TextInput>(null);
+  const folhaRef = useRef<TextInput>(null);
+  const livroRef = useRef<TextInput>(null);
+  const matriculaRef = useRef<TextInput>(null);
+  const anoLetivoRef = useRef<TextInput>(null);
 
   const validateField = useCallback(
     debounce((field: FormField, value: string) => {
@@ -63,7 +89,7 @@ export default function RegisterScreen() {
             break;
 
           case 'dataNascimento':
-            if (!/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(value)) {
+            if (!isValidDate(value)) {
               newErrors[field] = 'Data inválida';
             }
             break;
@@ -84,7 +110,7 @@ export default function RegisterScreen() {
             break;
 
           default:
-            if (!value.trim() && field !== 'naturalidade' && field !== 'nacionalidade') {
+            if (!value.trim() && requiredFields.includes(field)) {
               newErrors[field] = 'Campo obrigatório';
             }
         }
@@ -100,17 +126,11 @@ export default function RegisterScreen() {
     validateField(field, value);
   }, [validateField]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const validateRequiredFields = () => {
-    const requiredFields: FormField[] = [
-      'nome', 'dataNascimento', 'cpf', 'rg',
-      'sexo', 'turno', 'tipoSanguineo', 'raca', 'anoLetivo'
-    ];
-
+  const validateRequiredFields = useCallback(() => {
     return requiredFields.every(field => 
       formData[field] && formData[field].trim().length > 0
     );
-  };
+  }, [formData]);
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
@@ -119,17 +139,23 @@ export default function RegisterScreen() {
     const isValid = validateRequiredFields() && Object.keys(errors).length === 0;
 
     if (!isValid) {
-      const missingFields = [
-        !formData.nome && 'Nome',
-        !formData.dataNascimento && 'Data de Nascimento',
-        !formData.cpf && 'CPF',
-        !formData.rg && 'RG',
-        !formData.sexo && 'Sexo',
-        !formData.turno && 'Turno',
-        !formData.tipoSanguineo && 'Tipo Sanguíneo',
-        !formData.raca && 'Raça',
-        !formData.anoLetivo && 'Ano Letivo'
-      ].filter(Boolean);
+      const missingFields = requiredFields
+        .filter(field => !formData[field]?.trim())
+        .map(field => {
+          switch (field) {
+            case 'nome': return 'Nome';
+            case 'dataNascimento': return 'Data de Nascimento';
+            case 'cpf': return 'CPF';
+            case 'rg': return 'RG';
+            case 'sexo': return 'Sexo';
+            case 'turno': return 'Turno';
+            case 'tipoSanguineo': return 'Tipo Sanguíneo';
+            case 'raca': return 'Raça';
+            case 'anoLetivo': return 'Ano Letivo';
+            default: return '';
+          }
+        })
+        .filter(Boolean);
 
       if (missingFields.length > 0) {
         Alert.alert(
@@ -167,8 +193,7 @@ export default function RegisterScreen() {
     try {
       useFormStore.getState().setAluno(formData);
       router.push('/forms-materno');
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
+    } catch {
       Alert.alert(
         '⛔ Erro',
         'Ocorreu um erro ao tentar avançar',
@@ -187,11 +212,11 @@ export default function RegisterScreen() {
   const renderPicker = useCallback(({
     field,
     items,
-    placeholder
+    placeholder,
   }: {
     field: FormField,
     items: { label: string, value: string }[],
-    placeholder: string
+    placeholder: string,
   }) => (
     <View style={styles.pickerContainer}>
       <Picker
@@ -200,11 +225,13 @@ export default function RegisterScreen() {
         dropdownIconColor="#666"
         mode="dropdown"
         prompt={placeholder}
+        style={{ backgroundColor: '#fff' }}
+        itemStyle={{ color: '#000' }} // Texto preto para os itens
       >
         <Picker.Item 
           label={placeholder} 
           value="" 
-          style={{ color: '#000' }} // Placeholder text in black
+          style={{ color: '#666' }} // Placeholder em cinza
         />
         {items.map((item) => (
           <Picker.Item
@@ -238,174 +265,235 @@ export default function RegisterScreen() {
           <Text style={styles.label}>Nome</Text>
           <TextInput
             style={styles.input}
-            placeholder="João da Silva"
-             placeholderTextColor="#000"
+            placeholder="Nome completo"
+            placeholderTextColor="#666"
             value={formData.nome}
             onChangeText={(v) => handleChange('nome', v)}
             importantForAutofill="yes"
+            returnKeyType="next"
+            onSubmitEditing={() => naturalidadeRef.current?.focus()}
+            accessibilityLabel="Campo para nome completo"
+            accessibilityHint="Digite o nome completo do aluno"
           />
           {errors.nome && <Text style={styles.errorText}>{errors.nome}</Text>}
 
           <Text style={styles.label}>Data de Nascimento</Text>
           <MaskInput
             style={styles.input}
-            placeholder="00/00/0000"
-             placeholderTextColor="#000"
+            placeholder="Data de nascimento (DD/MM/AAAA)"
+            placeholderTextColor="#666"
             value={formData.dataNascimento}
             onChangeText={(v) => handleChange('dataNascimento', v)}
             mask={dataMask}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => naturalidadeRef.current?.focus()}
+            accessibilityLabel="Campo para data de nascimento"
+            accessibilityHint="Digite a data de nascimento no formato DD/MM/AAAA"
           />
           {errors.dataNascimento && <Text style={styles.errorText}>{errors.dataNascimento}</Text>}
 
           <Text style={styles.label}>Naturalidade</Text>
           <TextInput
+            ref={naturalidadeRef}
             style={styles.input}
-            placeholder="Teresopolitano"
-             placeholderTextColor="#000"
+            placeholder="Naturalidade"
+            placeholderTextColor="#666"
             value={formData.naturalidade}
             onChangeText={(v) => handleChange('naturalidade', v)}
+            returnKeyType="next"
+            onSubmitEditing={() => nacionalidadeRef.current?.focus()}
+            accessibilityLabel="Campo para naturalidade"
+            accessibilityHint="Digite a naturalidade do aluno"
           />
 
           <Text style={styles.label}>Nacionalidade</Text>
           <TextInput
+            ref={nacionalidadeRef}
             style={styles.input}
-            placeholder="Brasileira"
-             placeholderTextColor="#000"
+            placeholder="Nacionalidade"
+            placeholderTextColor="#666"
             value={formData.nacionalidade}
             onChangeText={(v) => handleChange('nacionalidade', v)}
+            returnKeyType="next"
+            onSubmitEditing={() => termoRef.current?.focus()}
+            accessibilityLabel="Campo para nacionalidade"
+            accessibilityHint="Digite a nacionalidade do aluno"
           />
 
-          <Text style={styles.label}>Sexo</Text>
-          {renderPicker({
-            field: 'sexo',
-            items: [
+<Text style={styles.label}>Sexo</Text>
+          <CustomPicker
+            items={[
               { label: 'Masculino', value: 'M' },
               { label: 'Feminino', value: 'F' },
               { label: 'Não-binário', value: 'Não-binário' },
               { label: 'Outro', value: 'Outro' },
               { label: 'Prefiro não informar', value: 'Prefiro não informar' },
-            ],
-            placeholder: 'Selecione'
-          })}
+            ]}
+            selectedValue={formData.sexo}
+            onValueChange={(v) => handleChange('sexo', v)}
+            placeholder="Selecione o sexo"
+          />
+          {errors.sexo && <Text style={styles.errorText}>{errors.sexo}</Text>}
 
           <Text style={styles.label}>CPF</Text>
           <MaskInput
             style={styles.input}
-            placeholder="000.000.000-00"
-             placeholderTextColor="#000"
+            placeholder="CPF (000.000.000-00)"
+            placeholderTextColor="#666"
             value={formData.cpf}
             onChangeText={(v) => handleChange('cpf', v)}
             mask={cpfMask}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => termoRef.current?.focus()}
+            accessibilityLabel="Campo para CPF"
+            accessibilityHint="Digite o CPF no formato 000.000.000-00"
           />
           {errors.cpf && <Text style={styles.errorText}>{errors.cpf}</Text>}
 
           <Text style={styles.label}>RG</Text>
           <MaskInput
             style={styles.input}
-            placeholder="00.000.000-0"
-             placeholderTextColor="#000"
+            placeholder="RG (00.000.000-0)"
+            placeholderTextColor="#666"
             value={formData.rg}
             onChangeText={(v) => handleChange('rg', v)}
             mask={rgMask}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => termoRef.current?.focus()}
+            accessibilityLabel="Campo para RG"
+            accessibilityHint="Digite o RG no formato 00.000.000-0"
           />
           {errors.rg && <Text style={styles.errorText}>{errors.rg}</Text>}
 
           <Text style={styles.label}>Termo</Text>
           <TextInput
+            ref={termoRef}
             style={styles.input}
             placeholder="Número do termo"
-             placeholderTextColor="#000"
+            placeholderTextColor="#666"
             value={formData.termo}
             onChangeText={(v) => handleChange('termo', v)}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => folhaRef.current?.focus()}
+            accessibilityLabel="Campo para número do termo"
+            accessibilityHint="Digite o número do termo"
           />
 
           <Text style={styles.label}>Folha</Text>
           <TextInput
+            ref={folhaRef}
             style={styles.input}
             placeholder="Número da folha"
-             placeholderTextColor="#000"
+            placeholderTextColor="#666"
             value={formData.folha}
             onChangeText={(v) => handleChange('folha', v)}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => livroRef.current?.focus()}
+            accessibilityLabel="Campo para número da folha"
+            accessibilityHint="Digite o número da folha"
           />
 
           <Text style={styles.label}>Livro</Text>
           <TextInput
+            ref={livroRef}
             style={styles.input}
             placeholder="Número do livro"
-             placeholderTextColor="#000"
+            placeholderTextColor="#666"
             value={formData.livro}
             onChangeText={(v) => handleChange('livro', v)}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => matriculaRef.current?.focus()}
+            accessibilityLabel="Campo para número do livro"
+            accessibilityHint="Digite o número do livro"
           />
 
           <Text style={styles.label}>Matrícula</Text>
           <TextInput
+            ref={matriculaRef}
             style={styles.input}
             placeholder="Número da matrícula"
-             placeholderTextColor="#000"
+            placeholderTextColor="#666"
             value={formData.matricula}
             onChangeText={(v) => handleChange('matricula', v)}
             keyboardType="number-pad"
+            returnKeyType="next"
+            onSubmitEditing={() => anoLetivoRef.current?.focus()}
+            accessibilityLabel="Campo para número da matrícula"
+            accessibilityHint="Digite o número da matrícula"
           />
 
-          <Text style={styles.label}>Turno</Text>
-          {renderPicker({
-            field: 'turno',
-            items: [
+<Text style={styles.label}>Turno</Text>
+          <CustomPicker
+            items={[
               { label: 'Manhã', value: 'Manhã' },
               { label: 'Tarde', value: 'Tarde' },
-              { label: 'Integral', value: 'Integral' }
-            ],
-            placeholder: 'Selecione o Turno'
-          })}
+              { label: 'Integral', value: 'Integral' },
+            ]}
+            selectedValue={formData.turno}
+            onValueChange={(v) => handleChange('turno', v)}
+            placeholder="Selecione o turno"
+          />
+          {errors.turno && <Text style={styles.errorText}>{errors.turno}</Text>}
 
           <Text style={styles.label}>Tipo Sanguíneo</Text>
-          {renderPicker({
-            field: 'tipoSanguineo',
-            items: [
+          <CustomPicker
+            items={[
               { label: 'A+', value: 'A+' },
               { label: 'A-', value: 'A-' },
               { label: 'B+', value: 'B+' },
+              { label: 'B-', value: 'B-' },
               { label: 'O+', value: 'O+' },
               { label: 'O-', value: 'O-' },
               { label: 'AB+', value: 'AB+' },
-              { label: 'AB-', value: 'AB-' }
-            ],
-            placeholder: 'Selecione o Tipo Sanguíneo'
-          })}
+              { label: 'AB-', value: 'AB-' },
+            ]}
+            selectedValue={formData.tipoSanguineo}
+            onValueChange={(v) => handleChange('tipoSanguineo', v)}
+            placeholder="Selecione o tipo sanguíneo"
+          />
+          {errors.tipoSanguineo && <Text style={styles.errorText}>{errors.tipoSanguineo}</Text>}
 
-          <Text style={styles.label}>Raça</Text>
-          {renderPicker({
-            field: 'raca',
-            items: [
+          <Text style={styles.label}>Raça/Cor</Text>
+          <CustomPicker
+            items={[
               { label: 'Amarela', value: 'Amarela' },
               { label: 'Branca', value: 'Branca' },
               { label: 'Indígena', value: 'Indígena' },
               { label: 'Parda', value: 'Parda' },
               { label: 'Preta', value: 'Preta' },
-            ],
-            placeholder: 'Selecione a Raça'
-          })}
-
+            ]}
+            selectedValue={formData.raca}
+            onValueChange={(v) => handleChange('raca', v)}
+            placeholder="Selecione a raça/cor"
+          />
+          {errors.raca && <Text style={styles.errorText}>{errors.raca}</Text>}
+          
           <Text style={styles.label}>Ano Letivo</Text>
           <TextInput
-            style={globalStyles.input}
+            ref={anoLetivoRef}
+            style={styles.input}
             placeholder="Ano letivo atual"
-            placeholderTextColor="#000" // Placeholder text in black
+            placeholderTextColor="#666"
             value={formData.anoLetivo}
             onChangeText={(v) => handleChange('anoLetivo', v)}
             keyboardType="number-pad"
+            returnKeyType="done"
+            accessibilityLabel="Campo para ano letivo"
+            accessibilityHint="Digite o ano letivo atual"
           />
 
           <TouchableOpacity
             style={[styles.button, isSubmitting && styles.buttonDisabled]}
             onPress={handleSubmit}
             disabled={isSubmitting}
+            accessibilityLabel="Avançar para próxima etapa"
+            accessibilityHint="Clique para enviar os dados e avançar"
           >
             <Text style={styles.buttonText}>
               {isSubmitting ? 'Validando...' : 'Próximo'}
@@ -413,8 +501,10 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push('/home')}
+            onPress={() => router.push('/')}
             style={styles.backButton}
+            accessibilityLabel="Cancelar cadastro"
+            accessibilityHint="Voltar para tela inicial"
           >
             <Text style={styles.backLink}>Cancelar e Voltar</Text>
           </TouchableOpacity>
@@ -468,7 +558,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#ffffff',
     marginBottom: 8,
-    color: '#000', // Ensures the input text is black
+    color: '#000',
   },
   pickerContainer: {
     width: '100%',
