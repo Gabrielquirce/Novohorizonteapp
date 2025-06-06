@@ -1,9 +1,9 @@
-import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 import { debounce } from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   Alert,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import useFormStore from './Store/useFormStore';
-import CustomPicker from './components/CustomPicker'
+import CustomPicker from './components/CustomPicker';
 
 type FormField = keyof typeof initialFormState;
 
@@ -63,7 +63,7 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState<Record<FormField, string>>({} as Record<FormField, string>);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Refs para gerenciamento de foco
+  // Refs para todos os campos de texto
   const naturalidadeRef = useRef<TextInput>(null);
   const nacionalidadeRef = useRef<TextInput>(null);
   const termoRef = useRef<TextInput>(null);
@@ -71,6 +71,22 @@ export default function RegisterScreen() {
   const livroRef = useRef<TextInput>(null);
   const matriculaRef = useRef<TextInput>(null);
   const anoLetivoRef = useRef<TextInput>(null);
+  
+  // Ref para o ScrollView
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Função para rolar até o campo quando o teclado abre
+  const scrollToInput = (reactNode: any) => {
+    if (scrollViewRef.current && reactNode) {
+      // Usando uma função de medida para encontrar a posição do elemento
+      reactNode.measureLayout(
+        scrollViewRef.current.getInnerViewNode(),
+        (x: number, y: number) => {
+          scrollViewRef.current?.scrollTo({ y: y - 100, animated: true });
+        }
+      );
+    }
+  };
 
   const validateField = useCallback(
     debounce((field: FormField, value: string) => {
@@ -193,7 +209,7 @@ export default function RegisterScreen() {
     try {
       useFormStore.getState().setAluno(formData);
       router.push('/forms-materno');
-    } catch {
+    } catch (error) {
       Alert.alert(
         '⛔ Erro',
         'Ocorreu um erro ao tentar avançar',
@@ -209,49 +225,14 @@ export default function RegisterScreen() {
     }
   }, [errors, formData, validateField, validateRequiredFields]);
 
-  const renderPicker = useCallback(({
-    field,
-    items,
-    placeholder,
-  }: {
-    field: FormField,
-    items: { label: string, value: string }[],
-    placeholder: string,
-  }) => (
-    <View style={styles.pickerContainer}>
-      <Picker
-        selectedValue={formData[field]}
-        onValueChange={(v) => handleChange(field, v)}
-        dropdownIconColor="#666"
-        mode="dropdown"
-        prompt={placeholder}
-        style={{ backgroundColor: '#fff' }}
-        itemStyle={{ color: '#000' }} // Texto preto para os itens
-      >
-        <Picker.Item 
-          label={placeholder} 
-          value="" 
-          style={{ color: '#666' }} // Placeholder em cinza
-        />
-        {items.map((item) => (
-          <Picker.Item
-            key={item.value}
-            label={item.label}
-            value={item.value}
-          />
-        ))}
-      </Picker>
-      {errors[field] && <Text style={styles.errorText}>{errors[field]}</Text>}
-    </View>
-  ), [formData, errors, handleChange]);
-
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={styles.container}
       keyboardVerticalOffset={Platform.select({ ios: 60, android: 0 })}
     >
       <ScrollView
+        ref={scrollViewRef}
         contentContainerStyle={styles.scrollContainer}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
@@ -272,6 +253,7 @@ export default function RegisterScreen() {
             importantForAutofill="yes"
             returnKeyType="next"
             onSubmitEditing={() => naturalidadeRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para nome completo"
             accessibilityHint="Digite o nome completo do aluno"
           />
@@ -288,6 +270,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => naturalidadeRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para data de nascimento"
             accessibilityHint="Digite a data de nascimento no formato DD/MM/AAAA"
           />
@@ -303,6 +286,7 @@ export default function RegisterScreen() {
             onChangeText={(v) => handleChange('naturalidade', v)}
             returnKeyType="next"
             onSubmitEditing={() => nacionalidadeRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para naturalidade"
             accessibilityHint="Digite a naturalidade do aluno"
           />
@@ -317,11 +301,12 @@ export default function RegisterScreen() {
             onChangeText={(v) => handleChange('nacionalidade', v)}
             returnKeyType="next"
             onSubmitEditing={() => termoRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para nacionalidade"
             accessibilityHint="Digite a nacionalidade do aluno"
           />
 
-<Text style={styles.label}>Sexo</Text>
+          <Text style={styles.label}>Sexo</Text>
           <CustomPicker
             items={[
               { label: 'Masculino', value: 'M' },
@@ -347,6 +332,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => termoRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para CPF"
             accessibilityHint="Digite o CPF no formato 000.000.000-00"
           />
@@ -363,6 +349,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => termoRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para RG"
             accessibilityHint="Digite o RG no formato 00.000.000-0"
           />
@@ -379,6 +366,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => folhaRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para número do termo"
             accessibilityHint="Digite o número do termo"
           />
@@ -394,6 +382,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => livroRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para número da folha"
             accessibilityHint="Digite o número da folha"
           />
@@ -409,6 +398,7 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => matriculaRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para número do livro"
             accessibilityHint="Digite o número do livro"
           />
@@ -424,11 +414,12 @@ export default function RegisterScreen() {
             keyboardType="number-pad"
             returnKeyType="next"
             onSubmitEditing={() => anoLetivoRef.current?.focus()}
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para número da matrícula"
             accessibilityHint="Digite o número da matrícula"
           />
 
-<Text style={styles.label}>Turno</Text>
+          <Text style={styles.label}>Turno</Text>
           <CustomPicker
             items={[
               { label: 'Manhã', value: 'Manhã' },
@@ -473,7 +464,7 @@ export default function RegisterScreen() {
             placeholder="Selecione a raça/cor"
           />
           {errors.raca && <Text style={styles.errorText}>{errors.raca}</Text>}
-          
+
           <Text style={styles.label}>Ano Letivo</Text>
           <TextInput
             ref={anoLetivoRef}
@@ -484,6 +475,7 @@ export default function RegisterScreen() {
             onChangeText={(v) => handleChange('anoLetivo', v)}
             keyboardType="number-pad"
             returnKeyType="done"
+            onFocus={(event) => scrollToInput(event.target)}
             accessibilityLabel="Campo para ano letivo"
             accessibilityHint="Digite o ano letivo atual"
           />
@@ -559,14 +551,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     marginBottom: 8,
     color: '#000',
-  },
-  pickerContainer: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 6,
-    overflow: 'hidden',
-    marginBottom: 8,
   },
   button: {
     backgroundColor: '#8B0000',
