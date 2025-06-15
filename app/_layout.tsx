@@ -4,8 +4,6 @@ export default function RootLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}
     initialRouteName="index">
-      <Stack.Screen name="index"/>
-
       <Stack.Screen name="index" />
       <Stack.Screen name="forms-aluno" />
       <Stack.Screen name="solicitacoes" />
