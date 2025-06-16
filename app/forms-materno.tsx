@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { debounce } from "lodash";
 import React, { useCallback, useRef, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,12 +10,16 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal, // Import Modal for CustomModal
+  Pressable // Import Pressable for CustomModal buttons
 } from "react-native";
 import MaskInput from "react-native-mask-input";
 import useFormStore from "./Store/useFormStore";
 
+// Define the type for form fields
 type FormField = keyof typeof initialFormState;
 
+// Initial state for the form data
 const initialFormState = {
   nomeMae: "",
   cepMae: "",
@@ -32,6 +35,7 @@ const initialFormState = {
   numeroCasaMae: "",
 };
 
+// Masks for input fields
 const cepMask = [/\d/, /\d/, /\d/, /\d/, /\d/, "-", /\d/, /\d/, /\d/];
 const telefoneMask = [
   "(",
@@ -54,6 +58,7 @@ const cpfMask = [
   /\d/,
   /\d/,
   /\d/,
+
   ".",
   /\d/,
   /\d/,
@@ -82,6 +87,68 @@ const rgMask = [
 ];
 const dataMask = [/\d/, /\d/, "/", /\d/, /\d/, "/", /\d/, /\d/, /\d/, /\d/];
 
+/**
+ * Custom Modal component for displaying alerts and confirmations.
+ * Replaces native Alert.alert for consistent UI and better control.
+ *
+ * @param {object} props - Component properties.
+ * @param {boolean} props.visible - Controls the visibility of the modal.
+ * @param {string} props.title - Title text for the modal.
+ * @param {string} props.message - Message text for the modal.
+ * @param {Array<object>} props.buttons - Array of button configurations.
+ * @param {string} props.buttons[].text - Text displayed on the button.
+ * @param {function} props.buttons[].onPress - Function to call when the button is pressed.
+ * @param {'default' | 'cancel'} [props.buttons[].style] - Optional style for the button (e.g., 'cancel').
+ */
+const CustomModal = ({
+  visible,
+  title,
+  message,
+  buttons
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[];
+}) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={() => {}} // Handle Android back button
+    >
+      <View style={modalStyles.centeredView}>
+        <View style={modalStyles.modalView}>
+          <Text style={modalStyles.modalTitle}>{title}</Text>
+          <Text style={modalStyles.modalText}>{message}</Text>
+          <View style={modalStyles.buttonsContainer}>
+            {buttons.map((button, index) => (
+              <Pressable
+                key={index}
+                style={[
+                  modalStyles.button,
+                  button.style === 'cancel' && modalStyles.cancelButton
+                ]}
+                onPress={button.onPress}
+                accessibilityLabel={`Botão: ${button.text}`}
+              >
+                <Text style={[
+                  modalStyles.textStyle,
+                  button.style === 'cancel' && modalStyles.cancelText
+                ]}>
+                  {button.text}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+
 export default function FamiliaresMaternoScreen() {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<FormField, string>>(
@@ -90,7 +157,17 @@ export default function FamiliaresMaternoScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResponsavelMaterno, setHasResponsavelMaterno] = useState(false);
 
-  // Refs para todos os campos
+  // States for modal control
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalButtons, setModalButtons] = useState<{
+    text: string;
+    onPress: () => void;
+    style?: 'default' | 'cancel'
+  }[]>([]);
+
+  // Refs for all input fields
   const nomeRef = useRef<TextInput>(null);
   const cepRef = useRef<TextInput>(null);
   const telefoneRef = useRef<TextInput>(null);
@@ -104,22 +181,47 @@ export default function FamiliaresMaternoScreen() {
   const rgRef = useRef<TextInput>(null);
   const profissaoRef = useRef<TextInput>(null);
 
-  // Ref para ScrollView
+  // Ref for ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Removido scrollToInput pois causava erro de ref.measureLayout
+  /**
+   * Helper function to show the custom modal.
+   *
+   * @param {string} title - Title of the modal.
+   * @param {string} message - Message content of the modal.
+   * @param {Array<object>} buttons - Array of button objects { text, onPress, style? }.
+   */
+  const showModal = (
+    title: string,
+    message: string,
+    buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[]
+  ) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalButtons(buttons);
+    setModalVisible(true);
+  };
 
+  /**
+   * Validates a single form field with debounce.
+   * Ensures validations are not triggered too frequently while typing.
+   * @param {FormField} field - The name of the field to validate.
+   * @param {string} value - The current value of the field.
+   */
   const validateField = useCallback(
     (() => {
       const debounced = debounce((field: FormField, value: string) => {
         setErrors((prev) => {
           const newErrors = { ...prev };
+          // If responsible is not active, skip validation
           if (!hasResponsavelMaterno) return newErrors;
 
+          // Clear error if value is not empty
           if (value.trim().length > 0) {
             delete newErrors[field];
           }
 
+          // Specific field validations
           switch (field) {
             case "cpfMae":
               if (value.replace(/\D/g, "").length !== 11) {
@@ -127,13 +229,14 @@ export default function FamiliaresMaternoScreen() {
               }
               break;
 
-            case "cepMae": // Validação adicionada para CEP
+            case "cepMae":
               if (value.replace(/\D/g, "").length !== 8) {
                 newErrors[field] = "CEP inválido";
               }
               break;
 
             case "nascimentoMae":
+              // Basic date format validation (DD/MM/AAAA)
               if (
                 !/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(
                   value
@@ -156,10 +259,13 @@ export default function FamiliaresMaternoScreen() {
               break;
 
             default:
+              // General required field validation: remove 'enderecoMae' from optional exclusions
+              // as it is treated as required in handleSubmit's validateMaeFields and missingFields array.
               if (
                 !value.trim() &&
-                field !== "trabalhoMae" &&
-                field !== "enderecoMae"
+                field !== "trabalhoMae" && // Optional
+                field !== "telefoneTrabalhoMae" && // Optional
+                field !== "profissaoMae" // Optional
               ) {
                 newErrors[field] = "Campo obrigatório";
               }
@@ -168,12 +274,19 @@ export default function FamiliaresMaternoScreen() {
           return newErrors;
         });
       }, 300);
+      // Attach flush method for immediate execution when needed
       (debounced as any).flush = debounced.flush;
       return debounced;
     })(),
-    [hasResponsavelMaterno]
+    [hasResponsavelMaterno] // Re-create if hasResponsavelMaterno changes
   );
 
+  /**
+   * Handles changes to form input fields.
+   * Updates formData and triggers field validation.
+   * @param {FormField} field - The name of the field being changed.
+   * @param {string} value - The new value of the field.
+   */
   const handleChange = useCallback(
     (field: FormField, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
@@ -182,24 +295,41 @@ export default function FamiliaresMaternoScreen() {
     [validateField]
   );
 
+  /**
+   * Toggles the state of hasResponsavelMaterno.
+   * Clears form data and errors if disabled.
+   * Focuses on the first field if enabled.
+   */
   const toggleResponsavelMaterno = () => {
     const newState = !hasResponsavelMaterno;
     setHasResponsavelMaterno(newState);
 
     if (!newState) {
+      // Clear all fields and errors if the toggle is off
       setFormData(initialFormState);
       setErrors({} as Record<FormField, string>);
+      // Also clear the stored data if no responsible is selected
       useFormStore.getState().setMae(initialFormState);
     } else {
-      // Focar no primeiro campo ao ativar
+      // Focus on the first field when activated
       setTimeout(() => nomeRef.current?.focus(), 100);
     }
   };
 
+  /**
+   * Handles the form submission logic.
+   * Validates all required fields and displays appropriate modals for errors or success.
+   */
   const handleSubmit = useCallback(async () => {
+    /**
+     * Internal helper to validate all required fields for the mother.
+     * @returns {boolean} True if all required fields are filled, false otherwise.
+     */
     const validateMaeFields = () => {
+      // If responsible is not selected, no fields are required for this section
       if (!hasResponsavelMaterno) return true;
 
+      // Define required fields for the maternal responsible
       const requiredFields: FormField[] = [
         "nomeMae",
         "cepMae",
@@ -207,7 +337,7 @@ export default function FamiliaresMaternoScreen() {
         "nascimentoMae",
         "cpfMae",
         "emailMae",
-        "enderecoMae",
+        "enderecoMae", // This is consistently treated as required
         "rgMae",
         "numeroCasaMae",
       ];
@@ -217,18 +347,21 @@ export default function FamiliaresMaternoScreen() {
       );
     };
 
-    setIsSubmitting(true);
-    validateField.flush();
+    setIsSubmitting(true); // Indicate submission is in progress
+    validateField.flush(); // Force any pending debounced validations to run immediately
 
+    // If no maternal responsible, skip validation and navigate
     if (!hasResponsavelMaterno) {
       router.push("/forms-paterno");
       setIsSubmitting(false);
       return;
     }
 
+    // Check overall form validity (required fields filled and no validation errors)
     const isValid = validateMaeFields() && Object.keys(errors).length === 0;
 
     if (!isValid) {
+      // Identify missing required fields
       const missingFields = [
         !formData.nomeMae && "Nome Completo",
         !formData.cepMae && "CEP",
@@ -239,10 +372,11 @@ export default function FamiliaresMaternoScreen() {
         !formData.enderecoMae && "Endereço",
         !formData.rgMae && "RG",
         !formData.numeroCasaMae && "Número da Casa",
-      ].filter(Boolean);
+      ].filter(Boolean); // Filter out false/null values
 
       if (missingFields.length > 0) {
-        Alert.alert(
+        // Show modal for missing fields
+        showModal(
           "🚨 Campos Obrigatórios",
           `Para continuar, preencha os seguintes campos:\n\n• ${missingFields.join(
             "\n• "
@@ -251,48 +385,65 @@ export default function FamiliaresMaternoScreen() {
             {
               text: "Preencher Agora",
               style: "default",
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false);
+              },
             },
             {
               text: "Cancelar",
               style: "cancel",
-              onPress: () => setIsSubmitting(false),
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false); // Re-enable button on cancel
+              },
             },
           ]
         );
       } else if (Object.keys(errors).length > 0) {
-        Alert.alert(
+        // Show modal for validation errors (e.g., invalid CPF format)
+        showModal(
           "❌ Erro de Validação",
           "Corrija os campos destacados em vermelho antes de continuar",
           [
             {
               text: "Entendi",
               style: "cancel",
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false);
+              },
             },
           ]
         );
       }
 
-      setIsSubmitting(false);
+      // Important: Stop submission if validation fails
       return;
     }
 
+    // If validation passes, attempt to save data and navigate
     try {
-      useFormStore.getState().setMae(formData);
-      router.push("/forms-paterno");
+      useFormStore.getState().setMae(formData); // Save data to global store
+      router.push("/forms-paterno"); // Navigate to next screen
     } catch (error) {
-      console.error("Erro:", error);
-      Alert.alert(
+      console.error("Erro:", error); // Log the error for debugging
+      showModal(
         "⛔ Erro",
         "Ocorreu um erro ao tentar avançar para a próxima tela",
         [
           {
             text: "OK",
             style: "cancel",
+            onPress: () => {
+              setModalVisible(false);
+              setIsSubmitting(false);
+            },
           },
         ]
       );
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false); // Ensure button is re-enabled after attempt
     }
   }, [validateField, hasResponsavelMaterno, errors, formData]);
 
@@ -330,6 +481,7 @@ export default function FamiliaresMaternoScreen() {
           <Text style={styles.toggleLabel}>Possui Responsável Materno</Text>
         </View>
 
+        {/* Form fields, disabled if hasResponsavelMaterno is false */}
         <View
           style={[styles.form, !hasResponsavelMaterno && styles.formDisabled]}
         >
@@ -349,6 +501,7 @@ export default function FamiliaresMaternoScreen() {
             editable={hasResponsavelMaterno}
             returnKeyType="next"
             onSubmitEditing={() => cepRef.current?.focus()}
+            // Removed onFocus to avoid ref.measureLayout error, as per previous code's comment
             accessibilityLabel="Campo para nome da mãe"
             accessibilityHint="Digite o nome completo da mãe"
           />
@@ -612,6 +765,14 @@ export default function FamiliaresMaternoScreen() {
           <Text style={styles.backLink}>Voltar</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Render the CustomModal */}
+      <CustomModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        buttons={modalButtons}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -735,5 +896,68 @@ const styles = StyleSheet.create({
     color: "#dc2626",
     fontSize: 12,
     marginBottom: 8,
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // For Android shadow
+    width: '80%', // Responsive width
+    maxWidth: 400, // Max width for larger screens
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#666',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12, // Space between buttons
+  },
+  button: {
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#8B0000', // Primary button color
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#8B0000', // Border for cancel button
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  cancelText: {
+    color: '#8B0000', // Text color for cancel button
   },
 });

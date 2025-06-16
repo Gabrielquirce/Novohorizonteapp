@@ -7,16 +7,18 @@ import * as Sharing from "expo-sharing";
 import React, { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Linking,
-  Platform,
+  Modal,
+  Platform, // Import Modal for CustomModal
+  Pressable // Import Pressable for CustomModal buttons
+  ,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import MaskInput from "react-native-mask-input";
 import api from "./api/axiosInstance";
@@ -71,6 +73,77 @@ const telefoneMask = [
   /\d/,
 ];
 
+// Define the type for form fields in FormularioCompleto
+type FormDataComplete = {
+  reside: string;
+  respNome: string;
+  respCpf: string;
+  respTelefone: string;
+  pessoasAutorizadas: string;
+};
+
+/**
+ * Custom Modal component for displaying alerts and confirmations.
+ * Replaces native Alert.alert for consistent UI and better control.
+ *
+ * @param {object} props - Component properties.
+ * @param {boolean} props.visible - Controls the visibility of the modal.
+ * @param {string} props.title - Title text for the modal.
+ * @param {string} props.message - Message text for the modal.
+ * @param {Array<object>} props.buttons - Array of button configurations.
+ * @param {string} props.buttons[].text - Text displayed on the button.
+ * @param {function} props.buttons[].onPress - Function to call when the button is pressed.
+ * @param {'default' | 'cancel'} [props.buttons[].style] - Optional style for the button (e.g., 'cancel').
+ */
+const CustomModal = ({
+  visible,
+  title,
+  message,
+  buttons
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[];
+}) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={() => {}} // Handle Android back button
+    >
+      <View style={modalStyles.centeredView}>
+        <View style={modalStyles.modalView}>
+          <Text style={modalStyles.modalTitle}>{title}</Text>
+          <Text style={modalStyles.modalText}>{message}</Text>
+          <View style={modalStyles.buttonsContainer}>
+            {buttons.map((button, index) => (
+              <Pressable
+                key={index}
+                style={[
+                  modalStyles.button,
+                  button.style === 'cancel' && modalStyles.cancelButton
+                ]}
+                onPress={button.onPress}
+                accessibilityLabel={`Botão: ${button.text}`}
+              >
+                <Text style={[
+                  modalStyles.textStyle,
+                  button.style === 'cancel' && modalStyles.cancelText
+                ]}>
+                  {button.text}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+
 const FormularioCompleto = () => {
   const { aluno, mae, pai, clearStore } = useFormStore();
   const [matriculaTipo, setMatriculaTipo] = useState("");
@@ -83,7 +156,7 @@ const FormularioCompleto = () => {
   const [alergia, setAlergia] = useState("");
   const [temMedicamento, setTemMedicamento] = useState("");
   const [medicamento, setMedicamento] = useState("");
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataComplete>({
     reside: "",
     respNome: "",
     respCpf: "",
@@ -93,26 +166,56 @@ const FormularioCompleto = () => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  // States for modal control
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalButtons, setModalButtons] = useState<{
+    text: string;
+    onPress: () => void;
+    style?: 'default' | 'cancel'
+  }[]>([]);
+
   // Ref para ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const handleChange = useCallback((field: string, value: string) => {
+  /**
+   * Helper function to show the custom modal.
+   *
+   * @param {string} title - Title of the modal.
+   * @param {string} message - Message content of the modal.
+   * @param {Array<object>} buttons - Array of button objects { text, onPress, style? }.
+   */
+  const showModal = (
+    title: string,
+    message: string,
+    buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[]
+  ) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalButtons(buttons);
+    setModalVisible(true);
+  };
+
+
+  const handleChange = useCallback((field: keyof FormDataComplete, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   }, []);
 
   const handleEmail = () => {
-    Alert.alert(
+    showModal(
       "📧 Confirmação de Envio",
       "Tem certeza que deseja abrir o cliente de e-mail para enviar os documentos?",
       [
-        { text: "Cancelar", style: "cancel" },
+        { text: "Cancelar", style: "cancel", onPress: () => setModalVisible(false) },
         {
           text: "Enviar",
           onPress: () => {
+            setModalVisible(false);
             Linking.openURL(
               `mailto:vanessalimapsicopedagoga@bol.com.br?` +
-                `subject=Envio de Documentos - ${aluno.nome}&` +
-                `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
+              `subject=Envio de Documentos - ${aluno.nome}&` +
+              `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
             );
           },
         },
@@ -135,9 +238,10 @@ const FormularioCompleto = () => {
 
       // 3. Compartilhar o arquivo
       if (!(await Sharing.isAvailableAsync())) {
-        Alert.alert(
+        showModal(
           "Erro",
-          "Compartilhamento não disponível neste dispositivo"
+          "Compartilhamento não disponível neste dispositivo",
+          [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
         );
         return;
       }
@@ -148,7 +252,11 @@ const FormularioCompleto = () => {
         UTI: "com.adobe.pdf",
       });
     } catch (error) {
-      Alert.alert("Erro", "Falha ao acessar os termos");
+      showModal(
+        "Erro",
+        "Falha ao acessar os termos",
+        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
+      );
       console.error("Erro detalhado:", error);
     }
   };
@@ -178,7 +286,11 @@ const FormularioCompleto = () => {
       errors.push("Informe os medicamentos");
 
     if (errors.length > 0) {
-      Alert.alert("🚨 Campos Obrigatórios", `• ${errors.join("\n• ")}`);
+      showModal(
+        "🚨 Campos Obrigatórios",
+        `• ${errors.join("\n• ")}`,
+        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
+      );
       return false;
     }
     return true;
@@ -196,7 +308,11 @@ const FormularioCompleto = () => {
       errors.push("Telefone inválido");
 
     if (errors.length > 0) {
-      Alert.alert("🚨 Dados Incompletos", `• ${errors.join("\n• ")}`);
+      showModal(
+        "🚨 Dados Incompletos",
+        `• ${errors.join("\n• ")}`,
+        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
+      );
       return false;
     }
     return true;
@@ -284,22 +400,28 @@ const FormularioCompleto = () => {
         alunoId,
       });
 
-      Alert.alert("✅ Sucesso", "Cadastro completo realizado!");
-      clearStore();
-      router.push("/");
+      showModal("✅ Sucesso", "Cadastro completo realizado!", [
+        { text: "OK", onPress: () => {
+          setModalVisible(false);
+          clearStore();
+          router.push("/");
+        } }
+      ]);
     } catch (error) {
       let errorMessage = "Erro no cadastro:";
       if (isAxiosError(error)) {
         errorMessage += `\n${error.response?.data?.message || error.message}`;
       }
-      Alert.alert("⛔ Erro", errorMessage);
+      showModal("⛔ Erro", errorMessage, [
+        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) }
+      ]);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = () => {
-    Alert.alert(
+    showModal(
       "🔒 Política de Coleta de Dados",
       `Por questões de segurança, conformidade legal e bem-estar dos alunos, a escola necessita dos seguintes dados:
 
@@ -311,8 +433,11 @@ const FormularioCompleto = () => {
 
 Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins educacionais.`,
       [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Confirmar", onPress: () => submitData() },
+        { text: "Cancelar", style: "cancel", onPress: () => setModalVisible(false) },
+        { text: "Confirmar", onPress: () => {
+          setModalVisible(false);
+          submitData();
+        }},
       ]
     );
   };
@@ -617,6 +742,14 @@ Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins ed
           </View>
         )}
       </ScrollView>
+
+      {/* Render the CustomModal */}
+      <CustomModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        buttons={modalButtons}
+      />
     </KeyboardAvoidingView>
   );
 };
@@ -735,6 +868,69 @@ const styles = StyleSheet.create({
     color: "#dc2626",
     fontSize: 12,
     marginTop: 4,
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // For Android shadow
+    width: '80%', // Responsive width
+    maxWidth: 400, // Max width for larger screens
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#666',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12, // Space between buttons
+  },
+  button: {
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#8B0000', // Primary button color
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#8B0000', // Border for cancel button
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  cancelText: {
+    color: '#8B0000', // Text color for cancel button
   },
 });
 

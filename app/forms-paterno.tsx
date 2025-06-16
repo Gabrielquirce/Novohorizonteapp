@@ -2,7 +2,6 @@ import { router } from "expo-router";
 import { debounce } from "lodash";
 import React, { useCallback, useRef, useState } from "react";
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -11,12 +10,16 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  Modal, // Import Modal for CustomModal
+  Pressable // Import Pressable for CustomModal buttons
 } from "react-native";
 import MaskInput from "react-native-mask-input";
 import useFormStore from "./Store/useFormStore";
 
+// Define the type for form fields
 type FormField = keyof typeof initialFormState;
 
+// Initial state for the form data
 const initialFormState = {
   nomePai: "",
   cepPai: "",
@@ -32,6 +35,7 @@ const initialFormState = {
   numeroCasaPai: "",
 };
 
+// Masks for input fields
 const cepMask = [/\d/, /\d/, /\d/, /\d/, /\d/, "-", /\d/, /\d/, /\d/];
 const telefoneMask = [
   "(",
@@ -82,6 +86,67 @@ const rgMask = [
 ];
 const dataMask = [/\d/, /\d/, "/", /\d/, /\d/, "/", /\d/, /\d/, /\d/, /\d/];
 
+/**
+ * Custom Modal component for displaying alerts and confirmations.
+ * Replaces native Alert.alert for consistent UI and better control.
+ *
+ * @param {object} props - Component properties.
+ * @param {boolean} props.visible - Controls the visibility of the modal.
+ * @param {string} props.title - Title text for the modal.
+ * @param {string} props.message - Message text for the modal.
+ * @param {Array<object>} props.buttons - Array of button configurations.
+ * @param {string} props.buttons[].text - Text displayed on the button.
+ * @param {function} props.buttons[].onPress - Function to call when the button is pressed.
+ * @param {'default' | 'cancel'} [props.buttons[].style] - Optional style for the button (e.g., 'cancel').
+ */
+const CustomModal = ({
+  visible,
+  title,
+  message,
+  buttons
+}: {
+  visible: boolean;
+  title: string;
+  message: string;
+  buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[];
+}) => {
+  return (
+    <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+      onRequestClose={() => {}} // Handle Android back button
+    >
+      <View style={modalStyles.centeredView}>
+        <View style={modalStyles.modalView}>
+          <Text style={modalStyles.modalTitle}>{title}</Text>
+          <Text style={modalStyles.modalText}>{message}</Text>
+          <View style={modalStyles.buttonsContainer}>
+            {buttons.map((button, index) => (
+              <Pressable
+                key={index}
+                style={[
+                  modalStyles.button,
+                  button.style === 'cancel' && modalStyles.cancelButton
+                ]}
+                onPress={button.onPress}
+                accessibilityLabel={`Botão: ${button.text}`}
+              >
+                <Text style={[
+                  modalStyles.textStyle,
+                  button.style === 'cancel' && modalStyles.cancelText
+                ]}>
+                  {button.text}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 export default function FamiliaresPaternoScreen() {
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<Record<FormField, string>>(
@@ -89,6 +154,16 @@ export default function FamiliaresPaternoScreen() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasResponsavelPaterno, setHasResponsavelPaterno] = useState(false);
+
+  // States for modal control
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMessage, setModalMessage] = useState('');
+  const [modalButtons, setModalButtons] = useState<{
+    text: string;
+    onPress: () => void;
+    style?: 'default' | 'cancel'
+  }[]>([]);
 
   // Refs para todos os campos
   const nomeRef = useRef<TextInput>(null);
@@ -107,7 +182,23 @@ export default function FamiliaresPaternoScreen() {
   // Ref para ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
 
-  // Removido scrollToInput pois causava erro de ref.measureLayout
+  /**
+   * Helper function to show the custom modal.
+   *
+   * @param {string} title - Title of the modal.
+   * @param {string} message - Message content of the modal.
+   * @param {Array<object>} buttons - Array of button objects { text, onPress, style? }.
+   */
+  const showModal = (
+    title: string,
+    message: string,
+    buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[]
+  ) => {
+    setModalTitle(title);
+    setModalMessage(message);
+    setModalButtons(buttons);
+    setModalVisible(true);
+  };
 
   const validateField = useCallback(
     (() => {
@@ -127,7 +218,7 @@ export default function FamiliaresPaternoScreen() {
               }
               break;
 
-            case "cepPai": // Validação de CEP adicionada
+            case "cepPai":
               if (value.replace(/\D/g, "").length !== 8) {
                 newErrors[field] = "CEP inválido";
               }
@@ -159,7 +250,8 @@ export default function FamiliaresPaternoScreen() {
               if (
                 !value.trim() &&
                 field !== "trabalhoPai" &&
-                field !== "enderecoPai"
+                field !== "telefoneTrabalhoPai" && // Fixed: Added this back as it was missing from original
+                field !== "profissaoPai"
               ) {
                 newErrors[field] = "Campo obrigatório";
               }
@@ -191,7 +283,6 @@ export default function FamiliaresPaternoScreen() {
       setErrors({} as Record<FormField, string>);
       useFormStore.getState().setPai(initialFormState);
     } else {
-      // Focar no primeiro campo ao ativar
       setTimeout(() => nomeRef.current?.focus(), 100);
     }
   };
@@ -242,7 +333,7 @@ export default function FamiliaresPaternoScreen() {
       ].filter(Boolean);
 
       if (missingFields.length > 0) {
-        Alert.alert(
+        showModal(
           "🚨 Campos Obrigatórios",
           `Para continuar, preencha os seguintes campos:\n\n• ${missingFields.join(
             "\n• "
@@ -251,29 +342,39 @@ export default function FamiliaresPaternoScreen() {
             {
               text: "Preencher Agora",
               style: "default",
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false);
+              },
             },
             {
               text: "Cancelar",
               style: "cancel",
-              onPress: () => setIsSubmitting(false),
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false);
+              },
             },
           ]
         );
       } else if (Object.keys(errors).length > 0) {
-        Alert.alert(
+        showModal(
           "❌ Erro de Validação",
           "Corrija os campos destacados em vermelho antes de prosseguir",
           [
             {
               text: "Entendi",
               style: "cancel",
+              onPress: () => {
+                setModalVisible(false);
+                setIsSubmitting(false);
+              },
             },
           ]
         );
       }
 
-      setIsSubmitting(false);
-      return;
+      return; // Ensure return after showing modal
     }
 
     try {
@@ -281,13 +382,17 @@ export default function FamiliaresPaternoScreen() {
       router.push("/forms-obs");
     } catch (error) {
       console.error("Erro:", error);
-      Alert.alert(
+      showModal(
         "⛔ Erro",
         "Ocorreu um erro ao tentar avançar para a próxima tela",
         [
           {
             text: "OK",
             style: "cancel",
+            onPress: () => {
+              setModalVisible(false);
+              setIsSubmitting(false);
+            },
           },
         ]
       );
@@ -618,6 +723,14 @@ export default function FamiliaresPaternoScreen() {
           <Text style={styles.backLink}>Voltar</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Render the CustomModal */}
+      <CustomModal
+        visible={modalVisible}
+        title={modalTitle}
+        message={modalMessage}
+        buttons={modalButtons}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -741,5 +854,68 @@ const styles = StyleSheet.create({
     color: "#dc2626",
     fontSize: 12,
     marginBottom: 8,
+  },
+});
+
+const modalStyles = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5, // For Android shadow
+    width: '80%', // Responsive width
+    maxWidth: 400, // Max width for larger screens
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    textAlign: 'center',
+    color: '#333',
+  },
+  modalText: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#666',
+  },
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12, // Space between buttons
+  },
+  button: {
+    borderRadius: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#8B0000', // Primary button color
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#8B0000', // Border for cancel button
+  },
+  textStyle: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  cancelText: {
+    color: '#8B0000', // Text color for cancel button
   },
 });
