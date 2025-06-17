@@ -11,14 +11,13 @@ import {
   Linking,
   Modal,
   Platform, // Import Modal for CustomModal
-  Pressable // Import Pressable for CustomModal buttons
-  ,
+  Pressable, // Import Pressable for CustomModal buttons
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import MaskInput from "react-native-mask-input";
 import api from "./api/axiosInstance";
@@ -99,12 +98,16 @@ const CustomModal = ({
   visible,
   title,
   message,
-  buttons
+  buttons,
 }: {
   visible: boolean;
   title: string;
   message: string;
-  buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[];
+  buttons: {
+    text: string;
+    onPress: () => void;
+    style?: "default" | "cancel";
+  }[];
 }) => {
   return (
     <Modal
@@ -123,15 +126,17 @@ const CustomModal = ({
                 key={index}
                 style={[
                   modalStyles.button,
-                  button.style === 'cancel' && modalStyles.cancelButton
+                  button.style === "cancel" && modalStyles.cancelButton,
                 ]}
                 onPress={button.onPress}
                 accessibilityLabel={`Botão: ${button.text}`}
               >
-                <Text style={[
-                  modalStyles.textStyle,
-                  button.style === 'cancel' && modalStyles.cancelText
-                ]}>
+                <Text
+                  style={[
+                    modalStyles.textStyle,
+                    button.style === "cancel" && modalStyles.cancelText,
+                  ]}
+                >
                   {button.text}
                 </Text>
               </Pressable>
@@ -142,7 +147,6 @@ const CustomModal = ({
     </Modal>
   );
 };
-
 
 const FormularioCompleto = () => {
   const { aluno, mae, pai, clearStore } = useFormStore();
@@ -168,13 +172,15 @@ const FormularioCompleto = () => {
 
   // States for modal control
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalButtons, setModalButtons] = useState<{
-    text: string;
-    onPress: () => void;
-    style?: 'default' | 'cancel'
-  }[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalButtons, setModalButtons] = useState<
+    {
+      text: string;
+      onPress: () => void;
+      style?: "default" | "cancel";
+    }[]
+  >([]);
 
   // Ref para ScrollView
   const scrollViewRef = useRef<ScrollView>(null);
@@ -189,7 +195,11 @@ const FormularioCompleto = () => {
   const showModal = (
     title: string,
     message: string,
-    buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[]
+    buttons: {
+      text: string;
+      onPress: () => void;
+      style?: "default" | "cancel";
+    }[]
   ) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -197,25 +207,31 @@ const FormularioCompleto = () => {
     setModalVisible(true);
   };
 
-
-  const handleChange = useCallback((field: keyof FormDataComplete, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  }, []);
+  const handleChange = useCallback(
+    (field: keyof FormDataComplete, value: string) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
 
   const handleEmail = () => {
     showModal(
       "📧 Confirmação de Envio",
       "Tem certeza que deseja abrir o cliente de e-mail para enviar os documentos?",
       [
-        { text: "Cancelar", style: "cancel", onPress: () => setModalVisible(false) },
+        {
+          text: "Cancelar",
+          style: "cancel",
+          onPress: () => setModalVisible(false),
+        },
         {
           text: "Enviar",
           onPress: () => {
             setModalVisible(false);
             Linking.openURL(
               `mailto:vanessalimapsicopedagoga@bol.com.br?` +
-              `subject=Envio de Documentos - ${aluno.nome}&` +
-              `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
+                `subject=Envio de Documentos - ${aluno.nome}&` +
+                `body=Segue em anexo os documentos necessários para matrícula de (Nome Completo do Aluno) ${aluno.nome}`
             );
           },
         },
@@ -238,11 +254,13 @@ const FormularioCompleto = () => {
 
       // 3. Compartilhar o arquivo
       if (!(await Sharing.isAvailableAsync())) {
-        showModal(
-          "Erro",
-          "Compartilhamento não disponível neste dispositivo",
-          [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
-        );
+        showModal("Erro", "Compartilhamento não disponível neste dispositivo", [
+          {
+            text: "OK",
+            style: "cancel",
+            onPress: () => setModalVisible(false),
+          },
+        ]);
         return;
       }
 
@@ -252,11 +270,9 @@ const FormularioCompleto = () => {
         UTI: "com.adobe.pdf",
       });
     } catch (error) {
-      showModal(
-        "Erro",
-        "Falha ao acessar os termos",
-        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
-      );
+      showModal("Erro", "Falha ao acessar os termos", [
+        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) },
+      ]);
       console.error("Erro detalhado:", error);
     }
   };
@@ -286,11 +302,9 @@ const FormularioCompleto = () => {
       errors.push("Informe os medicamentos");
 
     if (errors.length > 0) {
-      showModal(
-        "🚨 Campos Obrigatórios",
-        `• ${errors.join("\n• ")}`,
-        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
-      );
+      showModal("🚨 Campos Obrigatórios", `• ${errors.join("\n• ")}`, [
+        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) },
+      ]);
       return false;
     }
     return true;
@@ -308,11 +322,9 @@ const FormularioCompleto = () => {
       errors.push("Telefone inválido");
 
     if (errors.length > 0) {
-      showModal(
-        "🚨 Dados Incompletos",
-        `• ${errors.join("\n• ")}`,
-        [{ text: "OK", style: "cancel", onPress: () => setModalVisible(false) }]
-      );
+      showModal("🚨 Dados Incompletos", `• ${errors.join("\n• ")}`, [
+        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) },
+      ]);
       return false;
     }
     return true;
@@ -347,36 +359,76 @@ const FormularioCompleto = () => {
 
       const alunoId = alunoResponse.data.id;
 
-      if (mae) {
+      // Mãe
+      if (mae && Object.values(mae).filter(Boolean).length > 0) {
+        const maeCompleta = {
+          nomeMae: mae.nomeMae ?? "Não informado",
+          cepMae: mae.cepMae ?? "00000-000",
+          telefoneMae: mae.telefoneMae ?? "(00) 00000-0000",
+          trabalhoMae: mae.trabalhoMae ?? "Não informado",
+          nascimentoMae: mae.nascimentoMae ?? "00/00/0000",
+          cpfMae: mae.cpfMae ?? "000.000.000-00",
+          emailMae: mae.emailMae ?? "nao@informado.com",
+          telefoneTrabalhoMae: mae.telefoneTrabalhoMae ?? "(00) 00000-0000",
+          enderecoMae: mae.enderecoMae ?? "Não informado",
+          rgMae: mae.rgMae ?? "00.000.000-0",
+          profissaoMae: mae.profissaoMae ?? "Não informado",
+          numeroCasaMae: mae.numeroCasaMae ?? "0",
+          alunoId,
+        };
+        await api.post("/maes", maeCompleta);
+      } else {
+        // Envia mãe padrão se não houver dados
         await api.post("/maes", {
-          nomeMae: mae.nomeMae,
-          cepMae: mae.cepMae,
-          telefoneMae: mae.telefoneMae,
-          trabalhoMae: mae.trabalhoMae,
-          nascimentoMae: mae.nascimentoMae,
-          cpfMae: mae.cpfMae,
-          emailMae: mae.emailMae,
-          telefoneTrabalhoMae: mae.telefoneTrabalhoMae,
-          enderecoMae: mae.enderecoMae,
-          rgMae: mae.rgMae,
-          profissaoMae: mae.profissaoMae,
+          nomeMae: "Não informado",
+          cepMae: "00000-000",
+          telefoneMae: "(00) 00000-0000",
+          trabalhoMae: "Não informado",
+          nascimentoMae: "00/00/0000",
+          cpfMae: "000.000.000-00",
+          emailMae: "nao@informado.com",
+          telefoneTrabalhoMae: "(00) 00000-0000",
+          enderecoMae: "Não informado",
+          rgMae: "00.000.000-0",
+          profissaoMae: "Não informado",
+          numeroCasaMae: "0",
           alunoId,
         });
       }
 
-      if (pai) {
+      // Pai
+      if (pai && Object.values(pai).filter(Boolean).length > 0) {
+        const paiCompleto = {
+          nomePai: pai.nomePai ?? "Não informado",
+          cepPai: pai.cepPai ?? "00000-000",
+          telefonePai: pai.telefonePai ?? "(00) 00000-0000",
+          trabalhoPai: pai.trabalhoPai ?? "Não informado",
+          nascimentoPai: pai.nascimentoPai ?? "00/00/0000",
+          cpfPai: pai.cpfPai ?? "000.000.000-00",
+          emailPai: pai.emailPai ?? "nao@informado.com",
+          telefoneTrabalhoPai: pai.telefoneTrabalhoPai ?? "(00) 00000-0000",
+          enderecoPai: pai.enderecoPai ?? "Não informado",
+          rgPai: pai.rgPai ?? "00.000.000-0",
+          profissaoPai: pai.profissaoPai ?? "Não informado",
+          numeroCasaPai: pai.numeroCasaPai ?? "0",
+          alunoId,
+        };
+        await api.post("/pais", paiCompleto);
+      } else {
+        // Envia pai padrão se não houver dados
         await api.post("/pais", {
-          nomePai: pai.nomePai,
-          cepPai: pai.cepPai,
-          telefonePai: pai.telefonePai,
-          trabalhoPai: pai.trabalhoPai,
-          nascimentoPai: pai.nascimentoPai,
-          cpfPai: pai.cpfPai,
-          emailPai: pai.emailPai,
-          telefoneTrabalhoPai: pai.telefoneTrabalhoPai,
-          enderecoPai: pai.enderecoPai,
-          rgPai: pai.rgPai,
-          profissaoPai: pai.profissaoPai,
+          nomePai: "Não informado",
+          cepPai: "00000-000",
+          telefonePai: "(00) 00000-0000",
+          trabalhoPai: "Não informado",
+          nascimentoPai: "00/00/0000",
+          cpfPai: "000.000.000-00",
+          emailPai: "nao@informado.com",
+          telefoneTrabalhoPai: "(00) 00000-0000",
+          enderecoPai: "Não informado",
+          rgPai: "00.000.000-0",
+          profissaoPai: "Não informado",
+          numeroCasaPai: "0",
           alunoId,
         });
       }
@@ -401,11 +453,14 @@ const FormularioCompleto = () => {
       });
 
       showModal("✅ Sucesso", "Cadastro completo realizado!", [
-        { text: "OK", onPress: () => {
-          setModalVisible(false);
-          clearStore();
-          router.push("/");
-        } }
+        {
+          text: "OK",
+          onPress: () => {
+            setModalVisible(false);
+            clearStore();
+            router.push("/");
+          },
+        },
       ]);
     } catch (error) {
       let errorMessage = "Erro no cadastro:";
@@ -413,7 +468,7 @@ const FormularioCompleto = () => {
         errorMessage += `\n${error.response?.data?.message || error.message}`;
       }
       showModal("⛔ Erro", errorMessage, [
-        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) }
+        { text: "OK", style: "cancel", onPress: () => setModalVisible(false) },
       ]);
     } finally {
       setLoading(false);
@@ -433,11 +488,18 @@ const FormularioCompleto = () => {
 
 Estes dados são protegidos conforme a LGPD e usados exclusivamente para fins educacionais.`,
       [
-        { text: "Cancelar", style: "cancel", onPress: () => setModalVisible(false) },
-        { text: "Confirmar", onPress: () => {
-          setModalVisible(false);
-          submitData();
-        }},
+        {
+          text: "Cancelar",
+          style: "cancel",
+          onPress: () => setModalVisible(false),
+        },
+        {
+          text: "Confirmar",
+          onPress: () => {
+            setModalVisible(false);
+            submitData();
+          },
+        },
       ]
     );
   };
@@ -874,17 +936,17 @@ const styles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)", // Dim background
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -892,45 +954,45 @@ const modalStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5, // For Android shadow
-    width: '80%', // Responsive width
+    width: "80%", // Responsive width
     maxWidth: 400, // Max width for larger screens
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
   modalText: {
     fontSize: 16,
     marginBottom: 24,
-    textAlign: 'center',
-    color: '#666',
+    textAlign: "center",
+    color: "#666",
   },
   buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 12, // Space between buttons
   },
   button: {
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#8B0000', // Primary button color
+    backgroundColor: "#8B0000", // Primary button color
   },
   cancelButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: '#8B0000', // Border for cancel button
+    borderColor: "#8B0000", // Border for cancel button
   },
   textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   cancelText: {
-    color: '#8B0000', // Text color for cancel button
+    color: "#8B0000", // Text color for cancel button
   },
 });
 

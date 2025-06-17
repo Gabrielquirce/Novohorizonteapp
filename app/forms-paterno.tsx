@@ -11,7 +11,7 @@ import {
   TouchableOpacity,
   View,
   Modal, // Import Modal for CustomModal
-  Pressable // Import Pressable for CustomModal buttons
+  Pressable, // Import Pressable for CustomModal buttons
 } from "react-native";
 import MaskInput from "react-native-mask-input";
 import useFormStore from "./Store/useFormStore";
@@ -103,12 +103,16 @@ const CustomModal = ({
   visible,
   title,
   message,
-  buttons
+  buttons,
 }: {
   visible: boolean;
   title: string;
   message: string;
-  buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[];
+  buttons: {
+    text: string;
+    onPress: () => void;
+    style?: "default" | "cancel";
+  }[];
 }) => {
   return (
     <Modal
@@ -127,15 +131,17 @@ const CustomModal = ({
                 key={index}
                 style={[
                   modalStyles.button,
-                  button.style === 'cancel' && modalStyles.cancelButton
+                  button.style === "cancel" && modalStyles.cancelButton,
                 ]}
                 onPress={button.onPress}
                 accessibilityLabel={`Botão: ${button.text}`}
               >
-                <Text style={[
-                  modalStyles.textStyle,
-                  button.style === 'cancel' && modalStyles.cancelText
-                ]}>
+                <Text
+                  style={[
+                    modalStyles.textStyle,
+                    button.style === "cancel" && modalStyles.cancelText,
+                  ]}
+                >
                   {button.text}
                 </Text>
               </Pressable>
@@ -157,13 +163,15 @@ export default function FamiliaresPaternoScreen() {
 
   // States for modal control
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalTitle, setModalTitle] = useState('');
-  const [modalMessage, setModalMessage] = useState('');
-  const [modalButtons, setModalButtons] = useState<{
-    text: string;
-    onPress: () => void;
-    style?: 'default' | 'cancel'
-  }[]>([]);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalButtons, setModalButtons] = useState<
+    {
+      text: string;
+      onPress: () => void;
+      style?: "default" | "cancel";
+    }[]
+  >([]);
 
   // Refs para todos os campos
   const nomeRef = useRef<TextInput>(null);
@@ -192,7 +200,11 @@ export default function FamiliaresPaternoScreen() {
   const showModal = (
     title: string,
     message: string,
-    buttons: { text: string; onPress: () => void; style?: 'default' | 'cancel' }[]
+    buttons: {
+      text: string;
+      onPress: () => void;
+      style?: "default" | "cancel";
+    }[]
   ) => {
     setModalTitle(title);
     setModalMessage(message);
@@ -250,7 +262,7 @@ export default function FamiliaresPaternoScreen() {
               if (
                 !value.trim() &&
                 field !== "trabalhoPai" &&
-                field !== "telefoneTrabalhoPai" && // Fixed: Added this back as it was missing from original
+                field !== "telefoneTrabalhoPai" &&
                 field !== "profissaoPai"
               ) {
                 newErrors[field] = "Campo obrigatório";
@@ -860,17 +872,17 @@ const styles = StyleSheet.create({
 const modalStyles = StyleSheet.create({
   centeredView: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)', // Dim background
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)", // Dim background
   },
   modalView: {
     margin: 20,
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 8,
     padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -878,44 +890,44 @@ const modalStyles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5, // For Android shadow
-    width: '80%', // Responsive width
+    width: "80%", // Responsive width
     maxWidth: 400, // Max width for larger screens
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 12,
-    textAlign: 'center',
-    color: '#333',
+    textAlign: "center",
+    color: "#333",
   },
   modalText: {
     fontSize: 16,
     marginBottom: 24,
-    textAlign: 'center',
-    color: '#666',
+    textAlign: "center",
+    color: "#666",
   },
   buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     gap: 12, // Space between buttons
   },
   button: {
     borderRadius: 6,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#8B0000', // Primary button color
+    backgroundColor: "#8B0000", // Primary button color
   },
   cancelButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: '#8B0000', // Border for cancel button
+    borderColor: "#8B0000", // Border for cancel button
   },
   textStyle: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center",
   },
   cancelText: {
-    color: '#8B0000', // Text color for cancel button
+    color: "#8B0000", // Text color for cancel button
   },
 });

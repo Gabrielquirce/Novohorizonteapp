@@ -578,7 +578,7 @@ export default function RegisterScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push('/')}
+            onPress={() => router.push('./')}
             style={styles.backButton}
             accessibilityLabel="Cancelar cadastro"
             accessibilityHint="Voltar para tela inicial"

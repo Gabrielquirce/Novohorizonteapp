@@ -53,9 +53,10 @@ type PaiData = {
 type ObservacoesData = {
     reside: string;
     respNome: string;
+    respCpf: string; // Adicionado para corresponder ao formulário
     respTelefone: string;
     pessoasAutorizadas: string;
-    matriculatipo: string;
+    matriculaTipo: string; // Corrigido para camelCase
     escola: string;
     temIrmaos: string;
     irmaosNome: string;
