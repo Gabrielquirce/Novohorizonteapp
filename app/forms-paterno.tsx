@@ -852,8 +852,10 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   backButton: {
-    marginTop: 8,
-    alignItems: "center",
+    position: 'relative',
+    marginTop: 20,
+    bottom: 15,
+    padding: 5,
   },
   backLink: {
     color: "#902121",

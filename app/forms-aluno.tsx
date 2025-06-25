@@ -3,15 +3,15 @@ import { debounce } from 'lodash';
 import React, { useCallback, useRef, useState } from 'react';
 import {
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Modal,
-  Pressable
+  View
 } from 'react-native';
 import MaskInput from 'react-native-mask-input';
 import useFormStore from './Store/useFormStore';
@@ -660,8 +660,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   backButton: {
-    marginTop: 8,
-    alignItems: 'center',
+    position: 'relative',
+    marginTop: 20,
+    bottom: 15,
+    padding: 5,
   },
   backLink: {
     color: '#902121',

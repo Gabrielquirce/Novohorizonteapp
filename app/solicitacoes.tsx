@@ -236,8 +236,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   backButton: {
+    position: 'relative',
     marginTop: 20,
-    alignSelf: "center",
+    bottom: 15,
+    padding: 5,
   },
   backText: {
     color: "#902121",

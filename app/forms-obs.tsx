@@ -874,8 +874,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   backButton: {
-    marginTop: 16,
-    alignSelf: "center",
+    position: 'relative',
+    alignItems: "center", // Center the text
+    justifyContent: "center",
+    marginTop: 20,
+    bottom: 15,
+    padding: 5,
+    fontSize: 20,
   },
   backLink: {
     color: "#902121",
